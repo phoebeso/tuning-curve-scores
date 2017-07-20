@@ -1,17 +1,20 @@
-function [grid_score] = calculate_grid_score(graph)
+function [gridScore] = calculate_grid_score(firingField)
+% Calculates the grid score of a cell by rotating the rate map of the cell
+% and computing the correlation between the rotated map and the original
+
 % Expected peak correlations of sinusoidal modulation
-corr_one = calculate_crosscorrelation(graph, 60);
-corr_two = calculate_crosscorrelation(graph, 120);
+correlation60 = calculate_autocorrelation(firingField, 60);
+correlation120 = calculate_autocorrelation(firingField, 120);
 
 % Expected trough correlations 
-corr_three = calculate_crosscorrelation(graph, 30);
-corr_four = calculate_crosscorrelation(graph, 90);
-corr_five = calculate_crosscorrelation(graph, 150);
+correlation30 = calculate_autocorrelation(firingField, 30);
+correlation90 = calculate_autocorrelation(firingField, 90);
+correlation150 = calculate_autocorrelation(firingField, 150);
 
 % 'Gridness' of cell defined as difference between lowest expected peak
 % correlation and highest expected trough correlation 
-peaks = [corr_one corr_two];
-troughs = [corr_three corr_four corr_five];
-grid_score = min(peaks) - max(troughs);
+peaks = [correlation60 correlation120];
+troughs = [correlation30 correlation90 correlation150];
+gridScore = min(peaks) - max(troughs);
 
 end
