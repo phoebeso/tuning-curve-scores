@@ -17,6 +17,16 @@ modifiedRateMap = bwlabel(modifiedRateMap);
 expand = 3;
 modifiedRateMapExpanded = kron(modifiedRateMap, ones(expand)); % Map of peaks 
 rateMapExpanded = kron(rateMap, ones(expand)); % Original map of all firing rates
+
+% % % % % % Calculates the largest peak size for future radius calculates (line 60) 
+% % % % % largestPeakSize = -inf; 
+% % % % % for i = 1:max(modifiedRateMap(:))
+% % % % %     [row,col] = find(modifiedRateMapExpanded == i);
+% % % % %     distance = calculate_longest_distance(col, row);
+% % % % %     if (distance > largestPeakSize)
+% % % % %         largestPeakSize = distance;
+% % % % %     end
+% % % % % end
  
 % Loops through all peaks and centers a circular field around that peak.
 % Chooses the circular field with the highest grid score. 
@@ -47,6 +57,7 @@ for i = 1:max(modifiedRateMap(:))
         % center and another peak plus the approxmate diameter of the
         % largest peak in the rate map 
         radius = ceil(min(distances)) + ceil(sqrt(maxBins));
+% % % % %         radius = ceil(min(distances)) + largestPeakSize;
         
         % Extracts the circular field from the rate map by multiplying a
         % mask of 0s and 1s with the rate map 
@@ -59,7 +70,7 @@ for i = 1:max(modifiedRateMap(:))
         % Concatanates zero vectors horizontally and vertically to center the
         % circular field for later crosscorrelation calculations
         % Additionally shifts the central peak's rows and cols for
-        % identification for grid score calculations 
+        % identification purposes for calculations  
         horizontalShift = abs(xCenter - xDim + xCenter);
         verticalShift = abs(yCenter - yDim + yCenter);
         dimensions = size(rateMapExpanded);
