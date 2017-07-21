@@ -1,9 +1,9 @@
-function [firingFields] = find_firing_fields(rateMap)
+function [maxFiringFields, maxGridScore] = find_firing_fields(rateMap)
 % Determines the circular region surrounding multiple firing fields given a
 % rate map 
 
 peakRate = max(rateMap(:));
-threshold = 0.8 * peakRate;
+threshold = 0.2 * peakRate;
 
 % Converts all position bins with firing rates below the threshold to zero
 % and labels connected components with firing rates above the threshold
@@ -19,47 +19,95 @@ for i = 1:max(modifiedRateMap(:))
         modifiedRateMap(modifiedRateMap == i) = 0;
     end
 end
-    
-%     [radius, center] = ExactMinBoundCircle(coordinates); % radius and center of original circle 
-    
-% Increases number of pixels per time bin to enhance image and circle quality 
+
+nPeaks = numel(unique(modifiedRateMap)) - 1;
+        
+% Increases number of pixels per time bin to enhance image and circle quality/accuracy 
 modifiedRateMapExpanded = kron(modifiedRateMap, ones(3));
 rateMapExpanded = kron(rateMap, ones(3));
 
+maxGridScore = -inf;
+maxFiringFields = zeros(size(rateMapExpanded));
+for i = 1:nPeaks
+    [row,col] = find(modifiedRateMapExpanded == i);
+    xCenter = ceil((max(col) + min(col)) / 2);
+    yCenter = ceil((max(row) + min(row)) / 2);
+    center = [xCenter yCenter];
+    
+    [row1, col1] = find(modifiedRateMapExpanded ~= i & modifiedRateMapExpanded ~= 0);
+    points = [col1 row1];
+    
+    distances = sqrt(sum(bsxfun(@minus, points, center).^2,2));
+    histogram = sort(hist(modifiedRateMapExpanded(:)), 'descend'); % number of occurances of each element in the modified rate map
+    n = histogram(2); % gets second largest value, because zero (no peak) should in theory be the value with the highest number of occurances
+    
+    radius = ceil(min(distances)) + ceil(sqrt(n)); % radius is the min distance from the center to another peak plus the approximate diameter of the
+    % largest peak in the rate map 
+    
+    dim = size(modifiedRateMapExpanded);
+    xDim = dim(1); yDim = dim(2);
+    [xx,yy] = ndgrid((1:yDim)-yCenter,(1:xDim)-xCenter);
+    mask = zeros(xDim,yDim);
+    mask((xx.^2 + yy.^2) < radius^2) = 1;
+    firingFields = rateMapExpanded .* mask;
+    
+%     % Center the circle for later crosscorrelation calculations
+%     xShift = ceil(xDim/2) - xCenter;
+%     yShift = ceil(yDim/2) - yCenter;
+%     firingFields = circshift(firingFields,[yShift,xShift]);
+
+    % Concatanates zero vectors horizontally and vertically to center the
+    % firing field for later crosscorrelation calculations 
+    horizontalShift = abs(xCenter - length(rateMapExpanded) + xCenter);
+    verticalShift = abs(yCenter - length(rateMapExpanded) + yCenter);
+    dimensions = size(rateMapExpanded);
+    height = dimensions(1);
+    width = dimensions(2);
+    horizontalAdd = zeros(height, horizontalShift);
+    verticalAdd = zeros(verticalShift, width + horizontalShift);
+    if (xCenter > length(rateMapExpanded) / 2)
+        firingFields = horzcat(firingFields, horizontalAdd);
+    else
+        firingFields = horzcat(horizontalAdd, firingFields);
+    end
+    
+    if (yCenter > length(rateMapExpanded) / 2)
+        firingFields = vertcat(firingFields, verticalAdd);
+    else
+        firingFields = vertcat(verticalAdd, firingFields);
+    end
+    
+    gridScore = calculate_grid_score(firingFields);
+    if (gridScore > maxGridScore)
+        maxGridScore = gridScore;
+        maxFiringFields = firingFields;
+    end
+end
+
 % Gets coordinates of firing fields 
-[row,col] = find(modifiedRateMapExpanded ~= 0);
-coordinates = [col row];
-    
-%     [radius, center] = ExactMinBoundCircle(coordinates);
-%     [x_center, y_center, radius] = circfit(col,row);
-%     x_center = ceil(x_center);
-%     y_center = ceil(y_center);
+% [row,col] = find(modifiedRateMapExpanded ~= 0);
+% coordinates = [col row];
+%     
+% % Fits circle around peak coordinates
+% circleParams = circle_fit_by_pratt(coordinates);
+% xCenter = ceil(circleParams(1));
+% yCenter = ceil(circleParams(2));
+% radius = ceil(circleParams(3)) + 3;
 
-% Fits circle around peak coordinates
-circleParams = CircleFitByPratt(coordinates);
-xCenter = ceil(circleParams(1));
-yCenter = ceil(circleParams(2));
-radius = ceil(circleParams(3)) + 3;
-
-% Gets circular firing field from rate map fitted around peaks 
-dim = size(modifiedRateMapExpanded);
-%     x_center = (center(1) * 3) - 1;
-%     y_center = (center(2) * 3) - 1;
-%     radius = (ceil(radius) * 3) + 3;
-%     x_center = round(center(1));
-%     y_center = round(center(2));
-xDim = dim(1); yDim = dim(2);
-[xx,yy] = ndgrid((1:yDim)-yCenter,(1:xDim)-xCenter);
-mask = zeros(xDim, yDim);
-mask((xx.^2 + yy.^2) < radius^2) = 1;
-firingFields = rateMapExpanded .* mask;
-    
-% Center the circle for later crosscorrelation calculations 
-x_shift = ceil(x_dim/2) - x_center;
-y_shift = ceil(y_dim/2) - y_center;
-firingFields = circshift(firingFields,[y_shift,x_shift]);
-    
-figure(1)
-imagesc(firingFields); colorbar 
+% Gets circular area fitted around peaks from rate map 
+% dim = size(modifiedRateMapExpanded);
+% xDim = dim(1); yDim = dim(2);
+% [xx,yy] = ndgrid((1:yDim)-yCenter,(1:xDim)-xCenter);
+% mask = zeros(xDim,yDim);
+% mask((xx.^2 + yy.^2) < radius^2) = 1;
+% firingFields = rateMapExpanded .* mask;
+%     
+% % Center the circle for later crosscorrelation calculations 
+% xShift = ceil(xDim/2) - xCenter;
+% yShift = ceil(yDim/2) - yCenter;
+% firingFields = circshift(firingFields,[yShift,xShift]);
+%     
+% figure(1)
+% imagesc(firingFields); colorbar 
 
 end

@@ -1,4 +1,4 @@
-function [autocorrelation] = calculate_autocorrelation(graph, angle)
+function [autocorrelation,rotatedGraph] = calculate_autocorrelation(graph, angle)
 % Calculates the correlation between a graph and the graph rotated by a
 % specified angle
 
@@ -12,8 +12,9 @@ n = sum(sum(~isnan(graph)));
     
 % Calculates the spatial correlation of the original and rotated rate map
 [sum1,sum2,sum3,sum4,sum5] = deal(0);
-for i = 1:length(graph)
-    for j = 1:length(graph)
+dimensions = size(graph);
+for i = 1:dimensions(1)
+    for j = 1:dimensions(2)
         if (~isnan(graph(i,j))) && (~isnan(rotatedGraph(i,j)))
             sum1 = sum1 + (graph(i,j) * rotatedGraph(i,j));
             sum2 = sum2 + graph(i,j);
