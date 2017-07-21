@@ -2,6 +2,8 @@ function [maxCircularField, maxGridScore] = find_circular_field(rateMap)
 % Determines the circular region surrounding multiple firing fields to 
 % calculate the grid score from given a rate map 
 
+% git test
+
 % Threshold firing rate for a position bin to be considered a peak
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
