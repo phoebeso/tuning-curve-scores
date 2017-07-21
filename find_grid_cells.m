@@ -64,8 +64,24 @@ smoothFiringRate = conv(firingRate,filter,'same');
 
 [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
 [circularField, gridScore] = find_circular_field(rateMap);
+[autocorrelogram] = compute_autocorrelogram(circularField); 
 
 figure(1)
 imagesc(rateMap); colorbar
-figure(2); colorbar
+figure(2);
 imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+figure(3)
+imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+
+% load simdata.mat
+% 
+% rateMap = simdata{4};
+% [circularField, gridScore] = find_circular_field(rateMap);
+% [autocorrelogram] = compute_autocorrelogram(circularField); 
+% 
+% figure(1)
+% imagesc(rateMap); colorbar
+% figure(2);
+% imagesc(circularField); colorbar
+% figure(3)
+% imagesc(autocorrelogram); colorbar
