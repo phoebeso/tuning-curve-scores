@@ -1,4 +1,4 @@
-function [maxFiringFields, maxGridScore] = find_firing_fields(rateMap)
+function [maxCircularField, maxGridScore] = find_circular_field(rateMap)
 % Determines the circular region surrounding multiple firing fields given a
 % rate map 
 
