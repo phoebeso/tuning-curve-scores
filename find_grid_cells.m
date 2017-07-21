@@ -63,10 +63,9 @@ dt = post(3) - post(2); firingRate = spiketrain / dt;
 smoothFiringRate = conv(firingRate,filter,'same');
 
 [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-[firingField, gridScore] = find_firing_fields(rateMap); 
-
+[circularField, gridScore] = find_circular_field(rateMap);
 
 figure(1)
 imagesc(rateMap); colorbar
-figure(2)
-imagesc(firingField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+figure(2); colorbar
+imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
