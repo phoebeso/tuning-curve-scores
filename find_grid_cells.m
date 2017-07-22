@@ -51,37 +51,37 @@ clear all; clc;
 % sigPercentile = prctile(gridScores,99);
 % gridCells = find(gridScores > sigPercentile);
 
-load data_for_cell77.mat
-
-posx = posx_c;
-posy = posy_c;
-nPosBins = 20;
-boxSize = 100;
-
-filter = gaussian(-4:4,2,0); filter = filter / sum(filter); 
-dt = post(3) - post(2); firingRate = spiketrain / dt;
-smoothFiringRate = conv(firingRate,filter,'same');
-
-[rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-[circularField, gridScore] = find_circular_field(rateMap);
-[autocorrelogram] = compute_autocorrelogram(circularField); 
-
-figure(1)
-imagesc(rateMap); colorbar
-figure(2);
-imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
-figure(3)
-imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
-
-% load simdata.mat
+% load data_for_cell77.mat
 % 
-% rateMap = simdata{4};
+% posx = posx_c;
+% posy = posy_c;
+% nPosBins = 20;
+% boxSize = 100;
+% 
+% filter = gaussian(-4:4,2,0); filter = filter / sum(filter); 
+% dt = post(3) - post(2); firingRate = spiketrain / dt;
+% smoothFiringRate = conv(firingRate,filter,'same');
+% 
+% [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
 % [circularField, gridScore] = find_circular_field(rateMap);
 % [autocorrelogram] = compute_autocorrelogram(circularField); 
 % 
 % figure(1)
 % imagesc(rateMap); colorbar
 % figure(2);
-% imagesc(circularField); colorbar
+% imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
 % figure(3)
-% imagesc(autocorrelogram); colorbar
+% imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+
+load simdata.mat
+
+rateMap = simdata{1};
+[circularField, gridScore] = find_circular_field(rateMap);
+[autocorrelogram] = compute_autocorrelogram(circularField); 
+
+figure(1)
+imagesc(rateMap); colorbar
+figure(2);
+imagesc(circularField); colorbar
+figure(3)
+imagesc(autocorrelogram); colorbar
