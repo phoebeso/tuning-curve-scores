@@ -1,4 +1,3 @@
-clear all; clc
 % Border scores are calculated from two variables, CM and DM. First, firing
 % fields were defined as group of adjacent pixels with a firing rate larger
 % than 20% of the peak firing rate of the rate map. For each field, the
@@ -11,7 +10,9 @@ clear all; clc
 % (CM - DM)/(CM + DM)
 % Border scores range from +1 for a rate map with one infinitely thin
 % firing field along an entire wall, to -1 for a rate map with an
-% infinitely small firing field in the center of the field. 
+% infinitely small firing field in the center of the map. 
+
+clear all; clc
 
 load borderdata.mat
 rateMap = borderdata;
@@ -27,7 +28,7 @@ modifiedRateMap(modifiedRateMap > threshold) = 1;
 modifiedRateMap = bwlabel(modifiedRateMap);
 nFields = max(modifiedRateMap(:));
 
-% Calculate CM. CM is the largest proportion of pixels directly next to a
+% Calculates CM. CM is the largest proportion of pixels directly next to a
 % wall in a single firing field
 maxProportion = 0;
 for i = 1:nFields
