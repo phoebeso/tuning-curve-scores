@@ -71,17 +71,19 @@ clear all; clc;
 % figure(2);
 % imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
 % figure(3)
-% imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+% imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]);
+
 
 load simdata.mat
 
-rateMap = simdata{1};
-[circularField, gridScore] = find_circular_field(rateMap);
-[autocorrelogram] = compute_autocorrelogram(circularField); 
+allGridScores = zeros(4,1);
+allAutocorrelograms = cell(4,1);
 
-figure(1)
-imagesc(rateMap); colorbar
-figure(2);
-imagesc(circularField); colorbar
-figure(3)
-imagesc(autocorrelogram); colorbar
+for i = 1:4
+    rateMap = simdata{i};
+    [field, gridScore] = find_central_peak(rateMap);
+    [autocorrelogram] = calculate_autocorrelogram(field);
+    
+    allGridScores(i) = gridScore;
+    allAutocorrelograms{i} = autocorrelogram; 
+end
