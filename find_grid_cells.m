@@ -63,13 +63,13 @@ clear all; clc;
 % smoothFiringRate = conv(firingRate,filter,'same');
 % 
 % [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-% [circularField, gridScore] = find_circular_field(rateMap);
-% [autocorrelogram] = compute_autocorrelogram(circularField); 
+% [field, gridScore] = find_central_peak(rateMap);
+% % [autocorrelogram] = calculate_autocorrelogram(field); 
 % 
 % figure(1)
 % imagesc(rateMap); colorbar
 % figure(2);
-% imagesc(circularField, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+% imagesc(field, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
 % figure(3)
 % imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]);
 
@@ -78,6 +78,7 @@ load simdata.mat
 
 allGridScores = zeros(4,1);
 allAutocorrelograms = cell(4,1);
+allRateMaps = cell(4,1);
 
 for i = 1:4
     rateMap = simdata{i};
@@ -85,5 +86,50 @@ for i = 1:4
     [autocorrelogram] = calculate_autocorrelogram(field);
     
     allGridScores(i) = gridScore;
-    allAutocorrelograms{i} = autocorrelogram; 
+    allAutocorrelograms{i} = autocorrelogram;
+    allRateMaps{i} = rateMap; 
 end
+
+rateMap1 = allRateMaps{1};
+rateMap2 = allRateMaps{2};
+rateMap3 = allRateMaps{3};
+rateMap4 = allRateMaps{4};
+
+figure
+subplot(2,2,1)
+imagesc(rateMap1);
+
+subplot(2,2,2)
+imagesc(rateMap2);
+
+subplot(2,2,3)
+imagesc(rateMap3);
+
+subplot(2,2,4)
+imagesc(rateMap4);
+
+% figure(1)
+% subplot(2,3,1)
+% imagesc(rateMap1); colorbar
+% title('Rate Map 1')
+% 
+% subplot(2,3,[2 3])
+% imagesc(rateMap2); colorbar
+% title('Rate Map 2')
+% 
+% subplot(2,3,4)
+% imagesc(rateMap3); colorbar
+% 
+% subplot(2,3,5)
+% imagesc(rateMap4); colorbar
+% 
+% figure(2)
+% subplot(1,2,1)
+% imagesc(rateMap4); colorbar
+% axis square;
+% title('Rate Map')
+% 
+% subplot(1,2,2)
+% imagesc(allAutocorrelograms{4}); colorbar
+% axis square; 
+% title('Autocorrelogram')

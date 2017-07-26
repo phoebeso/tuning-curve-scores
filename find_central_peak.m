@@ -1,7 +1,7 @@
-function [maxField, maxGridScore] = find_central_peak(rateMap)
-% Determines the circular region surrounding multiple firing fields to 
-% calculate the grid score from given rate map 
- 
+function [maxShiftedField, maxGridScore] = find_central_peak(rateMap)
+% Given a rate map, determines the center peak to rotate the map around
+% from multiple firing fields that maximizes the grid score 
+
 % Threshold firing rate for a position bin to be considered a peak
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
@@ -21,7 +21,7 @@ rateMapExpanded = kron(rateMap, ones(expand)); % Original map of all firing rate
 % Loops through all peaks and centers a circular field around that peak.
 % Chooses the circular field with the highest grid score. 
 maxGridScore = -inf;
-maxField = zeros(size(rateMapExpanded));
+maxShiftedField = rateMapExpanded;
 for i = 1:max(modifiedRateMap(:))
     % Only considers connected components with greater than 6*expand
     % position bins as peaks 
@@ -33,7 +33,7 @@ for i = 1:max(modifiedRateMap(:))
         xCenter = ceil((max(colCenter) + min(colCenter)) / 2);
         yCenter = ceil((max(rowCenter) + min(rowCenter)) / 2);
            
-        % Concatanates nan vectors horizontally and vertically to center the
+        % Concatanates zero vectors horizontally and vertically to center the
         % circular field for later crosscorrelation calculations
         % Additionally shifts the central peak's rows and cols for
         % identification purposes for calculations
@@ -41,22 +41,21 @@ for i = 1:max(modifiedRateMap(:))
         yDim = dim(1); xDim = dim(2);
         horizontalShift = abs(xCenter - xDim + xCenter);
         verticalShift = abs(yCenter - yDim + yCenter);
-        horizontalAdd = nan(yDim, horizontalShift);
-        verticalAdd = nan(verticalShift, xDim + horizontalShift);
-        shiftedRateMap = rateMapExpanded; 
+        horizontalAdd = zeros(yDim, horizontalShift);
+        verticalAdd = zeros(verticalShift, xDim + horizontalShift);
         if (xCenter > length(rateMapExpanded) / 2)
-            shiftedRateMap = horzcat(shiftedRateMap, horizontalAdd);
+            shiftedRateMap = [rateMapExpanded horizontalAdd];
             shiftedColCenter = colCenter;
         else
-            shiftedRateMap = horzcat(horizontalAdd, shiftedRateMap);
+            shiftedRateMap = [horizontalAdd rateMapExpanded];
             shiftedColCenter = colCenter + horizontalShift; 
         end
             
         if (yCenter > length(rateMapExpanded) / 2)
-            shiftedRateMap = vertcat(shiftedRateMap, verticalAdd);
+            shiftedRateMap = [shiftedRateMap; verticalAdd];
             shiftedRowCenter = rowCenter;
         else
-            shiftedRateMap = vertcat(verticalAdd, shiftedRateMap);
+            shiftedRateMap = [verticalAdd; shiftedRateMap];
             shiftedRowCenter = rowCenter + verticalShift; 
         end
         
@@ -66,7 +65,7 @@ for i = 1:max(modifiedRateMap(:))
         gridScore = calculate_grid_score(fieldWithoutCenter);
         if (gridScore > maxGridScore)
             maxGridScore = gridScore;
-            maxField = shiftedRateMap;
+            maxShiftedField = shiftedRateMap;
         end
     end 
 end

@@ -14,8 +14,12 @@
 
 clear all; clc
 
-load borderdata.mat
-rateMap = borderdata;
+% load borderdata.mat
+% rateMap = borderdata;
+load simdata.mat
+
+rateMap = simdata{1};
+rateMap(:,7:18) = 0;
 
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
@@ -33,37 +37,45 @@ nFields = max(modifiedRateMap(:));
 maxProportion = 0;
 for i = 1:nFields
     % Determines number of adjacent pixels to a wall in a firing field
-    [row, col] = find(modifiedRateMap == i);
-    nTotalPixels = length(row);
-    fieldWidth = max(col) - min(col) + 1;
-    fieldHeight = max(row) - min(row) + 1;
+    [fieldRow, fieldCol] = find(modifiedRateMap == i);
+    nFieldPixels = length(fieldRow);
+    % Fields defined as needing to have more than 6 pixels 
+    if (nFieldPixels <= 6)
+        modifiedRateMap(fieldRow, fieldCol) = 0;
+        continue;
+    end
+    
+    fieldWidth = max(fieldCol) - min(fieldCol) + 1;
+    fieldHeight = max(fieldRow) - min(fieldRow) + 1;
+    % pixels along vertical wall
     if (fieldHeight > fieldWidth)
-        if (mean(col) < length(rateMap) / 2)
-            nAdjacentPixels = length(find(col == 1)); % pixels along left wall
+        if (mean(fieldCol) < length(rateMap) / 2)
+            nAdjacentPixels = length(find(fieldCol == 1)); % pixels along left wall
         else
-            nAdjacentPixels = length(find(col == length(rateMap))); % pixels along right wall
+            nAdjacentPixels = length(find(fieldCol == length(rateMap))); % pixels along right wall
         end
+    % pixels along horizontal wall 
     else
-        if (mean(row) < length(rateMap) / 2)
-            nAdjacentPixels = length(find(row == 1)); % pixels along top wall
+        if (mean(fieldRow) < length(rateMap) / 2)
+            nAdjacentPixels = length(find(fieldRow == 1)); % pixels along top wall
         else
-            nAdjacentPixels = length(find(row == length(rateMap))); % pixels along bottom wall
+            nAdjacentPixels = length(find(fieldRow == length(rateMap))); % pixels along bottom wall
         end
     end
     
-    proportion = nAdjacentPixels / nTotalPixels;
+    proportion = nAdjacentPixels / nFieldPixels;
     maxProportion = max(maxProportion, proportion); 
 end
 
 CM = maxProportion; 
 
-% Calculates DM 
+% Calculates DM
 [row, col] = find(modifiedRateMap ~= 0);
 nPixels = length(row);
 weightedTotalDistance = 0;
 maxDistance = 0;
 for i = 1:nPixels
-    % Calculates distance of pixel from all four walls 
+    % Calculates distance of pixel from all four walls
     distances = [abs(row(i) - 1) abs(row(i) - length(rateMap)) abs(col(i) - 1) abs(col(i) - length(rateMap))];
     minDistance = min(distances);
     rate = rateMap(row(i), col(i));
