@@ -63,7 +63,7 @@ clear all; clc;
 % smoothFiringRate = conv(firingRate,filter,'same');
 % 
 % [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-% [field, gridScore] = find_central_peak(rateMap);
+% [field, gridScore] = find_central_field(rateMap);
 % % [autocorrelogram] = calculate_autocorrelogram(field); 
 % 
 % figure(1)
@@ -82,7 +82,7 @@ allRateMaps = cell(4,1);
 
 for i = 1:4
     rateMap = simdata{i};
-    [field, gridScore] = find_central_peak(rateMap);
+    [field, gridScore] = find_central_field(rateMap);
     [autocorrelogram] = calculate_autocorrelogram(field);
     
     allGridScores(i) = gridScore;
