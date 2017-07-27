@@ -42,8 +42,8 @@ for i = 1:max(modifiedRateMap(:))
         yDim = dim(1); xDim = dim(2);
         horizontalShift = abs(xCenter - xDim + xCenter);
         verticalShift = abs(yCenter - yDim + yCenter);
-        horizontalAdd = zeros(yDim, horizontalShift);
-        verticalAdd = zeros(verticalShift, xDim + horizontalShift);
+        horizontalAdd = nan(yDim, horizontalShift);
+        verticalAdd = nan(verticalShift, xDim + horizontalShift);
         if (xCenter > length(rateMapExpanded) / 2)
             shiftedRateMap = [rateMapExpanded horizontalAdd];
             shiftedColCenter = colCenter;
@@ -62,7 +62,7 @@ for i = 1:max(modifiedRateMap(:))
         
         % Excludes the central field from the grid score calculation 
         fieldWithoutCenter = shiftedRateMap;
-        fieldWithoutCenter(shiftedRowCenter, shiftedColCenter) = 0;
+        fieldWithoutCenter(shiftedRowCenter, shiftedColCenter) = NaN;
         gridScore = calculate_grid_score(fieldWithoutCenter);
         if (gridScore > maxGridScore)
             maxGridScore = gridScore;

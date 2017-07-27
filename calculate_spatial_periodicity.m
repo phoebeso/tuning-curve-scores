@@ -1,4 +1,4 @@
-function [rotations, correlations, circularMatrix] = calculate_spatial_periodicity(autocorrelationMatrix)
+function [rotations, correlations, matrixWithoutCenter] = calculate_spatial_periodicity(autocorrelationMatrix)
 % Given an autocorrelation matrix, crops a circular region and then
 % calculates the spatial periodicity by rotation the autocorrelation matrix
 % in steps of 6 degrees and computing the correlation
@@ -11,39 +11,61 @@ threshold = 0.1;
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
 modifiedMatrix(modifiedMatrix > threshold) = 1;
-modifiedMatrix = bwlabel(modifiedMatrix);
+modifiedMatrix = bwlabel(modifiedMatrix); % IDs the fields with a value 
 
-centerValue = modifiedMatrix(ceil(yDim / 2), ceil(xDim / 2));
-[rowCenter, colCenter] = find(modifiedMatrix == centerValue);
-xCenter = ceil((max(colCenter) + min(colCenter)) / 2);
-yCenter = ceil((max(rowCenter) + min(rowCenter)) / 2);
-center = [yCenter xCenter];
-
-[row, col] = find(modifiedMatrix ~= 0 & modifiedMatrix ~= centerValue);
-coordinates = [row col];
-coordinates(:,3) = arrayfun(@(x,y) modifiedMatrix(x,y), row, col); % coordinate values in modifiedMatrix
-
-% Compute radius of circular mask
-% Radius defined as shortest distance of center to another field + the
-% longest distance across any field
-
-% Computes shortest Euclidean distance from center point 
-distances = sqrt(sum(bsxfun(@minus, coordinates, center).^2,2));
-minDistance = min(distances);
-
-% Computes longest distance between any two points in any field 
-nFields = max(modifiedMatrix(:));
-maxLongestDistance = 0; 
-for i = 1:nFields
-    [row, col] = find(modifiedMatrix == i);
-    longestDistance = calculate_longest_distance(col, row);
-    maxLongestDistance = max(maxLongestDistance, longestDistance);
+% Determines and identifies the center of the autocorrelation matrix
+yMatrixCenter = ceil(yDim / 2); xMatrixCenter = ceil(xDim / 2);
+if (modifiedMatrix(yMatrixCenter, xMatrixCenter) ~= 0)
+    centerValue = modifiedMatrix(ceil(yDim / 2), ceil(xDim / 2));
+else
+    % Coordinates of all fields in the autocorrelation matrix
+    [rowAllFields, colAllFields] = find(modifiedMatrix ~= 0);
+    % Distances of all coordinates from the center of the matrix 
+    distanceFromCenter = sqrt(sum(bsxfun(@minus, [rowAllFields colAllFields], [yMatrixCenter xMatrixCenter]).^2,2));
+    [~, idx1] = min(distanceFromCenter);
+    centerValue = modifiedMatrix(rowAllFields(idx1(1)), colAllFields(idx1(1)));
 end
 
-radius = minDistance + maxLongestDistance;
+% Gets center of central field 
+[rowCenterField, colCenterField] = find(modifiedMatrix == centerValue);
+xCenterField = ceil((max(colCenterField) + min(colCenterField)) / 2);
+yCenterField = ceil((max(rowCenterField) + min(rowCenterField)) / 2);
+center = [yCenterField xCenterField];
 
-[xMask,yMask] = meshgrid(-(xCenter-1):(xDim-xCenter),-(yCenter-1):(yDim-yCenter));
+% Creates a matrix of all coordinates in fields besides the central field.
+% First col is the row of the coordinate, second col is the col, third
+% col is the ID value of the coordinate in the modifiedMatrix (IDs which 
+% field the coordinate belongs to), and fourth col is the distance of the 
+% coordinate to the center of the central field
+[rowFields, colFields] = find(modifiedMatrix ~= 0 & modifiedMatrix ~= centerValue);
+coordinates = [rowFields colFields];
+coordinates(:,3) = arrayfun(@(x,y) modifiedMatrix(x,y), rowFields, colFields);
+coordinates(:,4) = sqrt(sum(bsxfun(@minus, coordinates(:,1:2), center).^2,2));
+
+% Sorts coordinates by distance to center in order to identify the 6 cloest
+% fields to the center field 
+[~, idx2] = sort(coordinates(:,4));
+sortedCoordinates = coordinates(idx2,:);
+% Determines 6 closest fields by looking at unique field ID values 
+[~, idx3, ~] = unique(sortedCoordinates(:,3), 'first');
+sortedIdx2 = sort(idx3);
+% Gets field ID values of 6 closest values
+if (length(sortedIdx2) >= 6)
+    fieldValues = sortedCoordinates(sortedIdx2(1:6),3);
+else
+    fieldValues = sortedCoordinates(sortedIdx2, 3);
+end
+
+[rowCircularFields, colCircularFields] = find(ismember(modifiedMatrix,fieldValues));
+circularFieldsCoord = [rowCircularFields colCircularFields];
+distances = sqrt(sum(bsxfun(@minus, circularFieldsCoord, center).^2,2));
+
+radius = max(distances);
+
+[xMask,yMask] = meshgrid(-(xCenterField-1):(xDim-xCenterField),-(yCenterField-1):(yDim-yCenterField));
 mask = ((xMask.^2 + yMask.^2) <= radius^2);
+mask = double(mask);
+mask(mask == 0) = NaN;
 circularMatrix = autocorrelationMatrix .* mask;
  
 % Concatanates zero vectors horizontally and vertically to center the
@@ -51,30 +73,32 @@ circularMatrix = autocorrelationMatrix .* mask;
 % calculations
 % Additionally shifts the central field's rows and cols for
 % identification purposes for calculations
-horizontalShift = abs(xCenter - xDim + xCenter);
-verticalShift = abs(yCenter - yDim + yCenter);
-horizontalAdd = zeros(yDim, horizontalShift);
-verticalAdd = zeros(verticalShift, xDim + horizontalShift);
-if (xCenter > xDim / 2)
+horizontalShift = abs(xCenterField - xDim + xCenterField);
+verticalShift = abs(yCenterField - yDim + yCenterField);
+horizontalAdd = nan(yDim, horizontalShift);
+verticalAdd = nan(verticalShift, xDim + horizontalShift);
+if (xCenterField > xDim / 2)
     shiftedCircularMatrix = [circularMatrix horizontalAdd];
-    shiftedColCenter = colCenter;
+    shiftedColCenter = colCenterField;
 else
     shiftedCircularMatrix = [horizontalAdd circularMatrix];
-    shiftedColCenter = colCenter + horizontalShift; 
+    shiftedColCenter = colCenterField + horizontalShift; 
 end
 
-if (yCenter > yDim / 2)
+if (yCenterField > yDim / 2)
     shiftedCircularMatrix = [shiftedCircularMatrix; verticalAdd];
-    shiftedRowCenter = rowCenter;
+    shiftedRowCenter = rowCenterField;
 else
     shiftedCircularMatrix = [verticalAdd; shiftedCircularMatrix];
-    shiftedRowCenter = rowCenter + verticalShift; 
+    shiftedRowCenter = rowCenterField + verticalShift; 
 end
 
+matrixWithoutCenter = shiftedCircularMatrix;
+matrixWithoutCenter(shiftedRowCenter, shiftedColCenter) = NaN;
 rotations = 0:6:360;
 correlations = nan(61,1);
 for i = 1:61
-    correlations(i) = calculate_correlation(shiftedCircularMatrix, 6*(i-1));
+    correlations(i) = calculate_correlation(matrixWithoutCenter, 6*(i-1));
 end
 
 end
