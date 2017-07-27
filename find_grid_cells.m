@@ -51,62 +51,60 @@ clear all; clc;
 % sigPercentile = prctile(gridScores,99);
 % gridCells = find(gridScores > sigPercentile);
 
-% load data_for_cell77.mat
+load data_for_cell77.mat
+
+posx = posx_c;
+posy = posy_c;
+nPosBins = 20;
+boxSize = 100;
+
+filter = gaussian(-4:4,2,0); filter = filter / sum(filter); 
+dt = post(3) - post(2); firingRate = spiketrain / dt;
+smoothFiringRate = conv(firingRate,filter,'same');
+
+[rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
+[field, gridScore] = find_central_field(rateMap);
+
+
+figure(1)
+imagesc(rateMap); colorbar
+figure(2);
+imagesc(field, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
+
+
+% load simdata.mat
 % 
-% posx = posx_c;
-% posy = posy_c;
-% nPosBins = 20;
-% boxSize = 100;
+% allGridScores = zeros(4,1);
+% allAutocorrelograms = cell(4,1);
+% allRateMaps = cell(4,1);
 % 
-% filter = gaussian(-4:4,2,0); filter = filter / sum(filter); 
-% dt = post(3) - post(2); firingRate = spiketrain / dt;
-% smoothFiringRate = conv(firingRate,filter,'same');
+% for i = 1:4
+%     rateMap = simdata{i};
+%     [field, gridScore] = find_central_field(rateMap);
+%     [autocorrelogram] = calculate_autocorrelogram(field);
+%     
+%     allGridScores(i) = gridScore;
+%     allAutocorrelograms{i} = autocorrelogram;
+%     allRateMaps{i} = rateMap; 
+% end
 % 
-% [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-% [field, gridScore] = find_central_field(rateMap);
-% % [autocorrelogram] = calculate_autocorrelogram(field); 
+% rateMap1 = allRateMaps{1};
+% rateMap2 = allRateMaps{2};
+% rateMap3 = allRateMaps{3};
+% rateMap4 = allRateMaps{4};
 % 
-% figure(1)
-% imagesc(rateMap); colorbar
-% figure(2);
-% imagesc(field, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]); colorbar
-% figure(3)
-% imagesc(autocorrelogram, [floor(min(rateMap(:))),ceil(max(rateMap(:)))]);
-
-
-load simdata.mat
-
-allGridScores = zeros(4,1);
-allAutocorrelograms = cell(4,1);
-allRateMaps = cell(4,1);
-
-for i = 1:4
-    rateMap = simdata{i};
-    [field, gridScore] = find_central_field(rateMap);
-    [autocorrelogram] = calculate_autocorrelogram(field);
-    
-    allGridScores(i) = gridScore;
-    allAutocorrelograms{i} = autocorrelogram;
-    allRateMaps{i} = rateMap; 
-end
-
-rateMap1 = allRateMaps{1};
-rateMap2 = allRateMaps{2};
-rateMap3 = allRateMaps{3};
-rateMap4 = allRateMaps{4};
-
-figure
-subplot(2,2,1)
-imagesc(rateMap1);
-
-subplot(2,2,2)
-imagesc(rateMap2);
-
-subplot(2,2,3)
-imagesc(rateMap3);
-
-subplot(2,2,4)
-imagesc(rateMap4);
+% figure
+% subplot(2,2,1)
+% imagesc(rateMap1);
+% 
+% subplot(2,2,2)
+% imagesc(rateMap2);
+% 
+% subplot(2,2,3)
+% imagesc(rateMap3);
+% 
+% subplot(2,2,4)
+% imagesc(rateMap4);
 
 % figure(1)
 % subplot(2,3,1)

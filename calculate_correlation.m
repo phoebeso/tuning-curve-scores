@@ -1,4 +1,4 @@
-function [autocorrelation] = calculate_correlation(rateMap, angle)
+function [correlation] = calculate_correlation(rateMap, angle)
 % Calculates the correlation between a graph and the graph rotated by a
 % specified angle
 
@@ -36,11 +36,11 @@ end
 % BECAUSE IF ANYTHING THE GRID SCORE IS JUST BECOMING MORE EXTREME? NOT
 % SURE 
 if (n < 20 * expand)
-    autocorrelation = NaN;
+    correlation = NaN;
 else 
     numerator = (n * sum1) - (sum2 * sum3);
     denominator = sqrt((n * sum4) - sum2^2) * sqrt((n * sum5) - sum3^2);
-    autocorrelation = numerator / denominator;
+    correlation = numerator / denominator;
 end
 
 end
