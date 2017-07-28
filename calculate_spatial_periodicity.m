@@ -8,7 +8,7 @@ threshold = 0.1;
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
 modifiedMatrix(modifiedMatrix > threshold) = 1;
-modifiedMatrix = bwlabel(modifiedMatrix); % IDs the pekas with a value
+modifiedMatrix = bwlabel(modifiedMatrix); % IDs the peaks 
 
 % Enhances matrices for smoother circle
 expand = 3;
@@ -73,21 +73,23 @@ radius = max(distances);
 % Extracts circular area from autocorrelation matrix 
 [xMask,yMask] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
 mask = ((xMask.^2 + yMask.^2) <= radius^2);
-% mask = double(mask);
-% mask(mask == 0) = NaN;
+mask = double(mask);
+mask(mask == 0) = NaN;
+
+circularMatrix = autocorrelationMatrix .* mask;
 
 % DISTANCE OF CENTER TO ANY OTHER POINT IN THE CENTRAL FIELD
-centerDistances = sqrt(sum(bsxfun(@minus, [rowCenterPeak colCenterPeak], center).^2,2));
-radius2 = max(centerDistances);
-[xMask2,yMask2] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
-mask2 = ((xMask2.^2 + yMask2.^2) > radius2^2);
+% centerDistances = sqrt(sum(bsxfun(@minus, [rowCenterPeak colCenterPeak], center).^2,2));
+% radius2 = max(centerDistances);
+% [xMask2,yMask2] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
+% mask2 = ((xMask2.^2 + yMask2.^2) > radius2^2);
 % mask2 = double(mask2);
 
-mask3 = mask & mask2;
-mask3 = double(mask3);
-mask3(mask3 == 0) = NaN;
+% mask3 = mask & mask2;
+% mask3 = double(mask3);
+% mask3(mask3 == 0) = NaN;
 
-circularMatrix = autocorrelationMatrix .* mask3;
+% circularMatrix = autocorrelationMatrix .* mask3;
  
 % Concatanates nan vectors horizontally and vertically to center the
 % circular area for later crosscorrelation calculations
