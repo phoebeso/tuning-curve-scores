@@ -3,15 +3,21 @@ function [rotations, correlations, matrixWithoutCenter] = calculate_spatial_peri
 % calculates the spatial periodicity by rotating the autocorrelation matrix
 % in steps of 6 degrees and computing the correlation
 
-dim = size(autocorrelationMatrix);
-yDim = dim(1); xDim = dim(2);
-
 % Locates peaks in the autocorrelation matrix and groups them together  
 threshold = 0.1;
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
 modifiedMatrix(modifiedMatrix > threshold) = 1;
-modifiedMatrix = bwlabel(modifiedMatrix); % IDs the pekas with a value 
+modifiedMatrix = bwlabel(modifiedMatrix); % IDs the pekas with a value
+
+% Enhances matrices for smoother circle
+expand = 3;
+
+modifiedMatrix = kron(modifiedMatrix, ones(expand));
+autocorrelationMatrix = kron(autocorrelationMatrix, ones(expand)); 
+
+dim = size(autocorrelationMatrix);
+yDim = dim(1); xDim = dim(2);
 
 % Determines and identifies the center of the autocorrelation matrix
 yMatrixCenter = ceil(yDim / 2); xMatrixCenter = ceil(xDim / 2);
@@ -67,9 +73,21 @@ radius = max(distances);
 % Extracts circular area from autocorrelation matrix 
 [xMask,yMask] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
 mask = ((xMask.^2 + yMask.^2) <= radius^2);
-mask = double(mask);
-mask(mask == 0) = NaN;
-circularMatrix = autocorrelationMatrix .* mask;
+% mask = double(mask);
+% mask(mask == 0) = NaN;
+
+% DISTANCE OF CENTER TO ANY OTHER POINT IN THE CENTRAL FIELD
+centerDistances = sqrt(sum(bsxfun(@minus, [rowCenterPeak colCenterPeak], center).^2,2));
+radius2 = max(centerDistances);
+[xMask2,yMask2] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
+mask2 = ((xMask2.^2 + yMask2.^2) > radius2^2);
+% mask2 = double(mask2);
+
+mask3 = mask & mask2;
+mask3 = double(mask3);
+mask3(mask3 == 0) = NaN;
+
+circularMatrix = autocorrelationMatrix .* mask3;
  
 % Concatanates nan vectors horizontally and vertically to center the
 % circular area for later crosscorrelation calculations
