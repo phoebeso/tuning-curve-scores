@@ -1,23 +1,31 @@
-function autocorrelationMatrix = calculate_autocorrelation_matrix(matrix)
+function correlationMatrix = calculate_correlation_matrix(matrix1,matrix2,n)
 % Input:mat1, mat2 assumed to be the same size.
 % n: matrix holding the number of cells joining multiplication in both matrices per time unit.
 %output: correlation matrix
 % If mat2 is not given it is assumed to be like mat1
 % if n is not given it is calculated as the maximum possible
 
-n = mulMatCross(matrix, matrix);
+if (nargin < 2)
+    matrix2 = matrix1;
+end
+ 
+if (nargin < 3)
+    if ~exist('n')
+        n = mulMatCross(zeros(length(matrix1)),zeros(length(matrix2)));
+    end
+end
 
-Zmat = ones(2*size(matrix)-1); %used for a shift right & down - zeroing relavent culmn& row
+Zmat = ones(2*size(matrix2)-1); %used for a shift right & down - zeroing relavent culmn& row
 Zmat(1,:) = NaN;
 Zmat(:,1) = NaN;
-onesMat = ones(size(matrix)); %for interior summation
+onesMat = ones(size(matrix2)); %for interior summation
 %basically doing this: cov(x,y)/(sigma(x)*sigma(y). see http://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
-sumXY = circshift(xcorr2(matrix,matrix),[1 1]).*Zmat;
-sumX = circshift(xcorr2(matrix,onesMat),[1 1]).*Zmat;
-sumY = circshift(xcorr2(onesMat,matrix),[1 1]).*Zmat;
-xSq = circshift(xcorr2(matrix.^2,onesMat),[1 1]).*Zmat;
-ySq = circshift(xcorr2(onesMat,matrix.^2),[1 1]).*Zmat;
-autocorrelationMatrix = (n.*sumXY-sumX.*sumY)./( (sqrt( n.*xSq- (sumX).^2  )  .* sqrt((n+1).*ySq-(sumY).^2)) +eps);
+sumXY = circshift(xcorr2(matrix1,matrix2),[1 1]).*Zmat;
+sumX = circshift(xcorr2(matrix1,onesMat),[1 1]).*Zmat;
+sumY = circshift(xcorr2(onesMat,matrix2),[1 1]).*Zmat;
+xSq = circshift(xcorr2(matrix1.^2,onesMat),[1 1]).*Zmat;
+ySq = circshift(xcorr2(onesMat,matrix2.^2),[1 1]).*Zmat;
+correlationMatrix = (n .* sumXY - sumX .* sumY) ./ ((sqrt(n .* xSq - (sumX).^2) .* sqrt((n+1) .* ySq - (sumY).^2)) + eps);
 
 end
 

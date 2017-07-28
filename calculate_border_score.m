@@ -4,9 +4,6 @@ function [borderScore] = calculate_border_score(rateMap)
 % firing field. DM was defined as the average minimum distance of all 
 % pixels in a field to any wall. The border score was then defined as 
 % (CM - DM)/(CM + DM)
-% Border scores range from +1 for a rate map with one infinitely thin
-% firing field along an entire wall, to -1 for a rate map with an
-% infinitely small firing field in the center of the map. 
 
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
