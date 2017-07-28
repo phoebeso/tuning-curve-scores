@@ -18,8 +18,7 @@ clear all; clc
 % rateMap = borderdata;
 load simdata.mat
 
-rateMap = simdata{1};
-rateMap(:,7:18) = 0;
+rateMap = simdata{3};
 
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
@@ -41,7 +40,7 @@ for i = 1:nFields
     nFieldPixels = length(fieldRow);
     % Fields defined as needing to have more than 6 pixels 
     if (nFieldPixels <= 6)
-        modifiedRateMap(fieldRow, fieldCol) = 0;
+        modifiedRateMap(modifiedRateMap == i) = 0;
         continue;
     end
     

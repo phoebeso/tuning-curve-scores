@@ -38,7 +38,7 @@ end
 % BECAUSE IF ANYTHING THE GRID SCORE IS JUST BECOMING MORE EXTREME? NOT
 % SURE 
 % if (n < 20 * expand)
-if (n < 20 * 3)
+if (n < 20)
     correlation = NaN;
 else 
     numerator = (n * sum1) - (sum2 * sum3);

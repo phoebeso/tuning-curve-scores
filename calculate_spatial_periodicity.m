@@ -94,7 +94,8 @@ else
 end
 
 matrixWithoutCenter = shiftedCircularMatrix;
-matrixWithoutCenter(shiftedRowCenter, shiftedColCenter) = NaN;
+centerIdx = sub2ind(size(matrixWithoutCenter), shiftedRowCenter, shiftedColCenter);
+matrixWithoutCenter(centerIdx) = NaN;
 rotations = 0:6:360;
 correlations = nan(61,1);
 for i = 1:61

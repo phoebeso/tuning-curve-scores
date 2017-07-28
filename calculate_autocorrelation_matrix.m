@@ -8,8 +8,8 @@ function autocorrelationMatrix = calculate_autocorrelation_matrix(matrix)
 n = mulMatCross(matrix, matrix);
 
 Zmat = ones(2*size(matrix)-1); %used for a shift right & down - zeroing relavent culmn& row
-Zmat(1,:) = 0;
-Zmat(:,1) = 0;
+Zmat(1,:) = NaN;
+Zmat(:,1) = NaN;
 onesMat = ones(size(matrix)); %for interior summation
 %basically doing this: cov(x,y)/(sigma(x)*sigma(y). see http://en.wikipedia.org/wiki/Pearson_product-moment_correlation_coefficient
 sumXY = circshift(xcorr2(matrix,matrix),[1 1]).*Zmat;

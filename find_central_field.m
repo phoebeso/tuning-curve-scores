@@ -62,7 +62,8 @@ for i = 1:max(modifiedRateMap(:))
         
         % Excludes the central field from the grid score calculation 
         fieldWithoutCenter = shiftedRateMap;
-        fieldWithoutCenter(shiftedRowCenter, shiftedColCenter) = NaN;
+        centerIdx = sub2ind(size(fieldWithoutCenter), shiftedRowCenter, shiftedColCenter);
+        fieldWithoutCenter(centerIdx) = NaN;
         gridScore = calculate_grid_score(fieldWithoutCenter);
         if (gridScore > maxGridScore)
             maxGridScore = gridScore;
