@@ -3,7 +3,8 @@
 % than 20% of the peak firing rate of the rate map. For each field, the
 % proportion of pixels directly adjacent to a wall and also part of the
 % field was calculated. CM was defined as the maximum proportion obtained
-% over all fields. DM was the average shortest distance to a wall for all
+% over all fields. DM was the average shortest distance to a wall (should it 
+% be any wall or the wall with largest proportion?) for all
 % pixels part of a firing field, weighted by the firing rate in each pixel.
 % DM was then normalized by the longest shortest distance to a wall of any
 % firing pixel in the rate map. The border score was then defined as 
@@ -11,6 +12,11 @@
 % Border scores range from +1 for a rate map with one infinitely thin
 % firing field along an entire wall, to -1 for a rate map with an
 % infinitely small firing field in the center of the map. 
+
+% OR 
+% the difference between the maximal length of a single wall touching on a 
+% single firing field and the average distance of this field from the wall, 
+% divided by the sum of those values
 
 clear all; clc
 
@@ -44,25 +50,39 @@ for i = 1:nFields
         continue;
     end
     
-    fieldWidth = max(fieldCol) - min(fieldCol) + 1;
-    fieldHeight = max(fieldRow) - min(fieldRow) + 1;
-    % pixels along vertical wall
-    if (fieldHeight > fieldWidth)
-        if (mean(fieldCol) < length(rateMap) / 2)
-            nAdjacentPixels = length(find(fieldCol == 1)); % pixels along left wall
-        else
-            nAdjacentPixels = length(find(fieldCol == length(rateMap))); % pixels along right wall
-        end
-    % pixels along horizontal wall 
-    else
-        if (mean(fieldRow) < length(rateMap) / 2)
-            nAdjacentPixels = length(find(fieldRow == 1)); % pixels along top wall
-        else
-            nAdjacentPixels = length(find(fieldRow == length(rateMap))); % pixels along bottom wall
-        end
-    end
+    nLeftPixels = length(find(fieldCol == 1));
+    nRightPixels = length(find(fieldCol == length(rateMap)));
+    nTopPixels = length(find(fieldRow == 1));
+    nBottomPixels = length(find(fieldRow == length(rateMap)));
+    maxAdjacentPixels = max([nLeftPixels nRightPixels nTopPixels nBottomPixels]);
     
-    proportion = nAdjacentPixels / nFieldPixels;
+%     fieldWidth = max(fieldCol) - min(fieldCol) + 1;
+%     fieldHeight = max(fieldRow) - min(fieldRow) + 1;
+%     % pixels along vertical wall
+%     if (fieldHeight > fieldWidth)
+%         if (mean(fieldCol) < length(rateMap) / 2)
+%             nAdjacentPixels = length(find(fieldCol == 1)); % pixels along left wall
+%             wall = 1;
+%             vertical = true;
+%         else
+%             nAdjacentPixels = length(find(fieldCol == length(rateMap))); % pixels along right wall
+%             wall = length(rateMap);
+%             vertical = true;
+%         end
+%     % pixels along horizontal wall 
+%     else
+%         if (mean(fieldRow) < length(rateMap) / 2)
+%             nAdjacentPixels = length(find(fieldRow == 1)); % pixels along top wall
+%             wall = 1;
+%             vertical = false;
+%         else
+%             nAdjacentPixels = length(find(fieldRow == length(rateMap))); % pixels along bottom wall
+%             wall = length(rateMap);
+%             vertical = false; 
+%         end
+%     end
+    
+    proportion = maxAdjacentPixels / nFieldPixels;
     maxProportion = max(maxProportion, proportion); 
 end
 
@@ -77,6 +97,11 @@ for i = 1:nPixels
     % Calculates distance of pixel from all four walls
     distances = [abs(row(i) - 1) abs(row(i) - length(rateMap)) abs(col(i) - 1) abs(col(i) - length(rateMap))];
     minDistance = min(distances);
+%     if vertical == true
+%         minDistance = abs(col(i) - wall);
+%     else 
+%         minDistance = abs(row(i) - wall);
+%     end
     rate = rateMap(row(i), col(i));
     weight = rate / maxRate; 
     weightedDistance = minDistance * weight;
