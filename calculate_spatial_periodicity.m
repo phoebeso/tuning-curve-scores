@@ -38,18 +38,18 @@ xCenterPeak = ceil((max(colCenterPeak) + min(colCenterPeak)) / 2);
 yCenterPeak = ceil((max(rowCenterPeak) + min(rowCenterPeak)) / 2);
 center = [yCenterPeak xCenterPeak];
 
-% Creates a matrix of all coordinates in fields besides the central field.
+% Creates a matrix of all coordinates in peaks besides the central peak.
 % First col is the row of the coordinate, second col is the col, third
 % col is the ID value of the coordinate in the modifiedMatrix (IDs which 
-% field the coordinate belongs to), and fourth col is the distance of the 
-% coordinate to the center of the central field
+% peak the coordinate belongs to), and fourth col is the distance of the 
+% coordinate to the center of the central peak
 [rowPeaks, colPeaks] = find(modifiedMatrix ~= 0 & modifiedMatrix ~= centerId);
 coordinates = [rowPeaks colPeaks];
 coordinates(:,3) = arrayfun(@(x,y) modifiedMatrix(x,y), rowPeaks, colPeaks);
 coordinates(:,4) = sqrt(sum(bsxfun(@minus, coordinates(:,1:2), center).^2,2));
 
-% Sorts coordinates by distance to center in order to identify the 6 cloest
-% fields to the center field 
+% Sorts coordinates by distance to center in order to identify the 6
+% closest peaks to the center peak 
 [~, idx2] = sort(coordinates(:,4));
 sortedCoordinates = coordinates(idx2,:);
 % Determines 6 closest fields by looking at unique field ID values 
