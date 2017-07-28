@@ -1,4 +1,4 @@
-function [correlation] = calculate_correlation(rateMap, angle)
+function [correlation] = calculate_correlation(matrix, angle)
 % Calculates the correlation between a graph and the graph rotated by a
 % specified angle
 
@@ -6,37 +6,33 @@ function [correlation] = calculate_correlation(rateMap, angle)
 % expand = 3;
 
 % Rotates rate map. Also resolves issue of a position having a value of 0
-minValue = min(rateMap(:));
-tempRateMap = rateMap - minValue + 1; % Sets minimum to 1 
-rotatedMap = imrotate(tempRateMap, angle, 'crop');
-rotatedMap(rotatedMap == 0) = NaN;
-rotatedMap = rotatedMap + minValue - 1; % Readjusts values 
+minValue = min(matrix(:));
+tempMatrix = matrix - minValue + 1; % Sets minimum to 1 
+rotatedMatrix = imrotate(tempMatrix, angle, 'crop');
+rotatedMatrix(rotatedMatrix == 0) = NaN;
+rotatedMatrix = rotatedMatrix + minValue - 1; % Readjusts values 
 
 % Number of pixels in the rate map for which rate was estimated for both 
 % the original and rotated rate map
 n = 0;
 
 % Calculates the correlation of the original and rotated rate map
-dimensions = size(rateMap);
+dimensions = size(matrix);
 [sum1, sum2, sum3, sum4, sum5] = deal(0);
 for i = 1:dimensions(1)
     for j = 1:dimensions(2)
-        if (~isnan(rateMap(i,j)) && ~isnan(rotatedMap(i,j)))
-            sum1 = sum1 + (rateMap(i,j) * rotatedMap(i,j));
-            sum2 = sum2 + rateMap(i,j);
-            sum3 = sum3 + rotatedMap(i,j);
-            sum4 = sum4 + rateMap(i,j)^2;
-            sum5 = sum5 + rotatedMap(i,j)^2;
+        if (~isnan(matrix(i,j)) && ~isnan(rotatedMatrix(i,j)))
+            sum1 = sum1 + (matrix(i,j) * rotatedMatrix(i,j));
+            sum2 = sum2 + matrix(i,j);
+            sum3 = sum3 + rotatedMatrix(i,j);
+            sum4 = sum4 + matrix(i,j)^2;
+            sum5 = sum5 + rotatedMatrix(i,j)^2;
             n = n + 1;
         end
     end
 end
 
 % Only estimate autocorrelation if n > 20 * expand pixels
-% NOT SURE IF BECAUSE THERE ARE N < 20 PIXELS FOR ONE AUTOCORRELATION THAT
-% ENTIRE CENTER SHOULD BE DISREGARDED AS A POTENTIAL FOR GRID SCORING
-% BECAUSE IF ANYTHING THE GRID SCORE IS JUST BECOMING MORE EXTREME? NOT
-% SURE 
 % if (n < 20 * expand)
 if (n < 20)
     correlation = NaN;
