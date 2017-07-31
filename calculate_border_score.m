@@ -25,7 +25,7 @@ for i = 1:nFields
     nFieldPixels = length(fieldRow);
     % Fields defined as needing to have more than 6 pixels 
     if (nFieldPixels <= 6)
-        modifiedRateMap(modifiedRateMap == i) = 0;
+%         modifiedRateMap(modifiedRateMap == i) = 0;
         continue;
     end
     
@@ -52,7 +52,7 @@ CM = maxDistance;
 nPixels = length(row);
 totalDistance = 0;
 for i = 1:nPixels
-    distances = [abs(row(i) - 1) abs(row(i) - length(rateMap)) abs(col(i) - 1) abs(col(i) - length(rateMap))];
+    distances = [abs(row(i)-1) abs(row(i)-length(rateMap)) abs(col(i)-1) abs(col(i)-length(rateMap))];
     minDistance = min(distances);
     
     totalDistance = totalDistance + minDistance;
@@ -63,7 +63,7 @@ if (isnan(DM))
     DM = 0;
 end
 
-borderScore = (CM - DM)/(CM + DM); 
+borderScore = (CM - DM)/(CM + DM);
 
 end
 
