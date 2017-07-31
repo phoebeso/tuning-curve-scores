@@ -3,7 +3,7 @@ function [correlation] = calculate_correlation(matrix, angle)
 % specified angle
 
 % How much the rate map was expanded by (look at find_central_field line 17 code)
-% expand = 3;
+expand = 3;
 
 % Rotates rate map. Also resolves issue of a position having a value of 0
 minValue = min(matrix(:));
@@ -34,7 +34,7 @@ end
 
 % Only estimate autocorrelation if n > 20 * expand pixels
 % if (n < 20 * expand)
-if (n < 20)
+if (n < 20 * expand)
     correlation = NaN;
 else 
     numerator = (n * sum1) - (sum2 * sum3);

@@ -41,11 +41,14 @@ for i = 1:4
     axis off
     title('Circular Autocorrelation Matrix')
 
+    gridScore2 = calculate_grid_score(circularMatrix); 
+    
 	subplot(2,2,4)
     plot(rotations, correlations);
     xlim([0 360])
-    xlabel('Rotation (deg)')
+    ylim([-inf 1])
+    xlabel({'Rotation (deg)'; sprintf('Grid Score: %f', gridScore2)})
     ylabel('Correlation')
     title('Periodicity')
-
+    
 end
