@@ -3,7 +3,7 @@ clear all; clc
 load simdata.mat
 
 for i = 1:4
-    rateMap = simdata{i};
+%     rateMap = simdata{i};
 
     borderScore = calculate_border_score(rateMap);
 

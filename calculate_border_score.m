@@ -14,11 +14,9 @@ modifiedRateMap = rateMap;
 modifiedRateMap(modifiedRateMap <= threshold | isnan(modifiedRateMap)) = 0;
 modifiedRateMap(modifiedRateMap > threshold) = 1;
 modifiedRateMap = bwlabel(modifiedRateMap);
-nFields = max(modifiedRateMap(:));
 
-% Calculates CM. CM is the largest proportion of pixels directly next to a
-% wall in a single firing field
-% maxProportion = 0;
+% Calculates CM
+nFields = max(modifiedRateMap(:));
 maxDistance = 0;
 for i = 1:nFields
     % Determines number of adjacent pixels to a wall in a firing field
@@ -31,8 +29,7 @@ for i = 1:nFields
         continue;
     end
     
-    % Calculates number of pixels along each wall and identifies the wall
-    % with the highest number of adjacent pixels  
+    % Calculates length of pixels along each wall 
     [rowLeftPixels, ~] = find(fieldCol == 1); % pixels along vertical left wall
     leftDistance = abs(max(rowLeftPixels) - min(rowLeftPixels));
     

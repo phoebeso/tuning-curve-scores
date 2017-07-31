@@ -69,7 +69,7 @@ for i = 1:max(modifiedRateMap(:))
             maxGridScore = gridScore;
             maxShiftedRateMap = shiftedRateMap;
         end
-    end 
+    end
 end
 
 end

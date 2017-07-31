@@ -22,7 +22,9 @@ for i = 1:4
     [~, gridScore] = find_central_field(rateMap);
 
     matrix = calculate_correlation_matrix(rateMap);
-
+    
+    [rotations, correlations, circularMatrix] = calculate_spatial_periodicity(matrix);
+    
     figure(i)
     subplot(2,2,1)
     imagesc(rateMap); colorbar
@@ -33,8 +35,6 @@ for i = 1:4
     imagesc(matrix, [-1 1]); colorbar
     axis off
     title('Autocorrelation Matrix')
-
-    [rotations, correlations, circularMatrix] = calculate_spatial_periodicity(matrix);
 
     subplot(2,2,3)
     imagesc(circularMatrix, [-1 1]); colorbar
