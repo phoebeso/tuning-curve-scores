@@ -121,7 +121,7 @@ centerIdx = sub2ind(size(matrixWithoutCenter), shiftedRowCenter, shiftedColCente
 matrixWithoutCenter(centerIdx) = NaN;
 
 % Calculates the correlation every 6 degrees 
-rotations = 0:6:360;
+rotations = (0:6:360)';
 correlations = nan(61,1);
 for i = 1:61
     correlations(i) = calculate_correlation(matrixWithoutCenter, 6*(i-1));

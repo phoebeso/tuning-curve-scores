@@ -1,9 +1,15 @@
 function [borderScore] = calculate_border_score(rateMap)
-% Border scores are calculated from two variables, CM and DM. CM was
-% defined as the maximal length of a single wall touching on a single
-% firing field. DM was defined as the average minimum distance of all 
-% pixels in a field to any wall. The border score was then defined as 
-% (CM - DM)/(CM + DM)
+% We identified border cells by computing, for each cell, the difference between 
+% the maximal length of a wall touching on a single firing field and the average 
+% distance of the firing locations from the nearest wall, divided by the sum of those values
+% http://www.nature.com/neuro/journal/v13/n8/full/nn.2602.html
+
+% OR
+
+% We identified such cells by computing, for each cell, the difference between 
+% the maximal length of a single wall touching on a single firing field and 
+% the average distance of this field from the wall, divided by the sum of those values
+% http://www.sciencedirect.com/science/article/pii/S0896627314001123
 
 maxRate = max(rateMap(:));
 threshold = 0.2 * maxRate;
@@ -18,6 +24,8 @@ modifiedRateMap = bwlabel(modifiedRateMap);
 % Calculates CM
 nFields = max(modifiedRateMap(:));
 maxDistance = 0;
+longestField = 0;
+maxIdx = 0;
 for i = 1:nFields
     % Determines number of adjacent pixels to a wall in a firing field
     [fieldRow, fieldCol] = find(modifiedRateMap == i);
@@ -42,20 +50,35 @@ for i = 1:nFields
     [~, colBottomPixels] = find(fieldRow == length(rateMap)); % pixels along horizontal bottom wall
     bottomDistance = abs(max(colBottomPixels) - min(colBottomPixels));
 
-    maxDistance = max([maxDistance leftDistance rightDistance topDistance bottomDistance]);
+    [fieldMaxDistance, idx] = max([leftDistance rightDistance topDistance bottomDistance]);
+    
+    if fieldMaxDistance > maxDistance
+        longestField = i;
+        maxIdx = idx; 
+        maxDistance = fieldMaxDistance;
+    end
 end
 
 CM = maxDistance;
 
 % Calculates DM
-[row, col] = find(modifiedRateMap ~= 0);
+[row, col] = find(modifiedRateMap == longestField);
 nPixels = length(row);
 totalDistance = 0;
 for i = 1:nPixels
-    distances = [abs(row(i)-1) abs(row(i)-length(rateMap)) abs(col(i)-1) abs(col(i)-length(rateMap))];
-    minDistance = min(distances);
+    if maxIdx == 1 || maxIdx == 3
+        wall = 1;
+    else
+        wall = length(rateMap);
+    end
     
-    totalDistance = totalDistance + minDistance;
+    if maxIdx == 1 || maxIdx == 2
+        distance = abs(col(i) - wall);
+    else
+        distance = abs(row(i) - wall);
+    end
+    
+    totalDistance = totalDistance + distance;
 end
 
 DM = totalDistance / nPixels;
@@ -66,4 +89,3 @@ end
 borderScore = (CM - DM)/(CM + DM);
 
 end
-
