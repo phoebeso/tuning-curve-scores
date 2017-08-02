@@ -17,7 +17,7 @@ load simdata.mat
 
 for i = 1:1
 
-    rateMap = simdata{1};
+    rateMap = simdata{4};
 
     [~, gridScore] = find_central_field(rateMap);
 
@@ -59,10 +59,34 @@ for i = 1:1
         partitionData = collapsePartitionData{j,2};
         xr = [repmat(partitionData, 6*collapsePartitionData{j,1}, 1); zeros(1,length(partitionData))];
         xr = [0 reshape(xr, 1, [])];
-        th = linspace(0, 359, length(xr));
+        
+        th = linspace(0, 360, length(xr));
         th = deg2rad(th);
 
         polar(th, xr);
+        
+        hHiddenText = findall(gca,'type','text');
+        angles = 0:30:330;
+        hObjToDelete = zeros( length(angles)-4, 1 );
+        angleIncrement = 360/collapsePartitionData{j,1}/4;
+        k = 0;
+        for ang = angles
+            hObj = findall(hHiddenText,'string',num2str(ang));
+            switch ang
+                case 0
+                    set(hObj,'string',sprintf('%.1f%c', 0, char(176)));
+                case 90
+                    set(hObj,'string',sprintf('%.1f%c', angleIncrement, char(176)));
+                case 180
+                    set(hObj,'string',sprintf('%.1f%c', angleIncrement*2, char(176)));
+                case 270
+                    set(hObj,'string',sprintf('%.1f%c', angleIncrement*3, char(176)));
+                otherwise
+                    k = k + 1;
+                    hObjToDelete(k) = hObj;
+            end
+        end
+        delete(hObjToDelete);
 
         title(sprintf('%.1f%c Degree Period', 360/collapsePartitionData{j,1}, char(176)))
     end
