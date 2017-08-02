@@ -1,10 +1,10 @@
-function [rotations, correlations, matrixWithoutCenter] = calculate_spatial_periodicity(autocorrelationMatrix)
+function [rotations, correlations, shiftedCircularMatrix] = calculate_spatial_periodicity(autocorrelationMatrix)
 % Given an autocorrelation matrix, crops a circular region and then
 % calculates the spatial periodicity by rotating the autocorrelation matrix
 % in steps of 6 degrees and computing the correlation
 
 % Locates peaks in the autocorrelation matrix and groups them together  
-threshold = 0.1;
+threshold = 0.4; % This value can be changed, normally 0.1 
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
 modifiedMatrix(modifiedMatrix > threshold) = 1;
@@ -68,28 +68,26 @@ end
 [rowCircularPeaks, colCircularPeaks] = find(ismember(modifiedMatrix,PeakIds));
 circularPeaksCoord = [rowCircularPeaks colCircularPeaks];
 distances = sqrt(sum(bsxfun(@minus, circularPeaksCoord, center).^2,2));
-radius = max(distances);
+radius1 = max(distances);
 
 % Extracts circular area from autocorrelation matrix 
-[xMask,yMask] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
-mask = ((xMask.^2 + yMask.^2) <= radius^2);
-mask = double(mask);
-mask(mask == 0) = NaN;
+[xMask1,yMask1] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
+mask1 = ((xMask1.^2 + yMask1.^2) <= radius1^2);
+mask1 = double(mask1);
 
-circularMatrix = autocorrelationMatrix .* mask;
+% Calculates radius of circle to surround central peak 
+centerDistances = sqrt(sum(bsxfun(@minus, [rowCenterPeak colCenterPeak], center).^2,2));
+radius2 = max(centerDistances);
+[xMask2,yMask2] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
+mask2 = ((xMask2.^2 + yMask2.^2) > radius2^2);
+mask2 = double(mask2);
 
-% DISTANCE OF CENTER TO ANY OTHER POINT IN THE CENTRAL FIELD
-% centerDistances = sqrt(sum(bsxfun(@minus, [rowCenterPeak colCenterPeak], center).^2,2));
-% radius2 = max(centerDistances);
-% [xMask2,yMask2] = meshgrid(-(xCenterPeak-1):(xDim-xCenterPeak),-(yCenterPeak-1):(yDim-yCenterPeak));
-% mask2 = ((xMask2.^2 + yMask2.^2) > radius2^2);
-% mask2 = double(mask2);
+% Gets mask with 2 circles to extract information from rate map
+mask3 = mask1 & mask2;
+mask3 = double(mask3);
+mask3(mask3 == 0) = NaN;
 
-% mask3 = mask & mask2;
-% mask3 = double(mask3);
-% mask3(mask3 == 0) = NaN;
-
-% circularMatrix = autocorrelationMatrix .* mask3;
+circularMatrix = autocorrelationMatrix .* mask3;
  
 % Concatanates nan vectors horizontally and vertically to center the
 % circular area for later crosscorrelation calculations
@@ -101,30 +99,21 @@ horizontalAdd = nan(yDim, horizontalShift);
 verticalAdd = nan(verticalShift, xDim + horizontalShift);
 if (xCenterPeak > xDim / 2)
     shiftedCircularMatrix = [circularMatrix horizontalAdd];
-    shiftedColCenter = colCenterPeak;
 else
     shiftedCircularMatrix = [horizontalAdd circularMatrix];
-    shiftedColCenter = colCenterPeak + horizontalShift; 
 end
 
 if (yCenterPeak > yDim / 2)
     shiftedCircularMatrix = [shiftedCircularMatrix; verticalAdd];
-    shiftedRowCenter = rowCenterPeak;
 else
-    shiftedCircularMatrix = [verticalAdd; shiftedCircularMatrix];
-    shiftedRowCenter = rowCenterPeak + verticalShift; 
+    shiftedCircularMatrix = [verticalAdd; shiftedCircularMatrix]; 
 end
-
-% Removes center field for correlation calculations
-matrixWithoutCenter = shiftedCircularMatrix;
-centerIdx = sub2ind(size(matrixWithoutCenter), shiftedRowCenter, shiftedColCenter);
-matrixWithoutCenter(centerIdx) = NaN;
 
 % Calculates the correlation every 6 degrees 
 rotations = (0:6:360)';
 correlations = nan(61,1);
 for i = 1:61
-    correlations(i) = calculate_correlation(matrixWithoutCenter, 6*(i-1));
+    correlations(i) = calculate_correlation(shiftedCircularMatrix, 6*(i-1));
 end
 
 end

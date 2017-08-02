@@ -13,7 +13,8 @@ modifiedRateMap(modifiedRateMap <= threshold | isnan(modifiedRateMap)) = 0;
 modifiedRateMap(modifiedRateMap > threshold) = 1;
 modifiedRateMap = bwlabel(modifiedRateMap);
         
-% Increases number of pixels per time bin to enhance image and circle quality/accuracy
+% Increases number of pixels per time bin to increase image/circle
+% resolution
 expand = 3;
 modifiedRateMapExpanded = kron(modifiedRateMap, ones(expand)); % Map of peaks 
 rateMapExpanded = kron(rateMap, ones(expand)); % Original map of all firing rates
@@ -24,7 +25,9 @@ maxGridScore = -inf;
 maxShiftedRateMap = rateMapExpanded;
 for i = 1:max(modifiedRateMap(:))
     % Only considers connected components with greater than 6*expand
-    % position bins as fields 
+    % position bins as fields
+    % 6 arbitrarily chosen, but normally a firing field was defined as
+    % being a contiguous region of at least 225 cm^2
     fieldSize = length(find(modifiedRateMapExpanded == i));
     if (fieldSize > 6 * expand)
         % Gets coordinates of the field to calculate the center of

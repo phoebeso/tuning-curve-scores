@@ -26,6 +26,7 @@ sumY  = circshift(xcorr2(onesMat,matrix2),[1 1]) .* Zmat;
 xSq   = circshift(xcorr2(matrix1.^2,onesMat),[1 1]) .* Zmat;
 ySq   = circshift(xcorr2(onesMat,matrix2.^2),[1 1]) .* Zmat;
 correlationMatrix = (n .* sumXY - sumX .* sumY) ./ ((sqrt(n .* xSq - (sumX).^2) .* sqrt((n+1) .* ySq - (sumY).^2)) + eps);
+correlationMatrix = correlationMatrix(2:end, 2:end); 
 
 end
 

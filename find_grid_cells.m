@@ -16,14 +16,20 @@ smoothFiringRate = conv(firingRate,filter,'same');
 load simdata.mat
 
 for i = 1:1
-
     rateMap = simdata{4};
 
+    % Calculates grid score from the rate map
     [~, gridScore] = find_central_field(rateMap);
 
-    matrix = calculate_correlation_matrix(rateMap);
+    % Calculates the correlation matrix from the rate map
+    correlationMatrix = calculate_correlation_matrix(rateMap);
     
-    [rotations, correlations, circularMatrix] = calculate_spatial_periodicity(matrix);
+    % Determines the spatial periodicity of the correlation matrix by
+    % calculating the correlation of the matrix in intervals of 6 degrees
+    [rotations, correlations, circularMatrix] = calculate_spatial_periodicity(correlationMatrix);
+    
+    % Calculates grid score from the correlation matrix
+    gridScore2 = calculate_grid_score(circularMatrix);
     
     figure(i)
     subplot(2,2,1)
@@ -32,7 +38,7 @@ for i = 1:1
     xlabel(['Grid Score: ' num2str(gridScore)])
 
     subplot(2,2,2)
-    imagesc(matrix, [-1 1]); colorbar
+    imagesc(correlationMatrix, [-1 1]); colorbar
     axis off
     title('Autocorrelation Matrix')
 
@@ -41,8 +47,6 @@ for i = 1:1
     axis off
     title('Circular Autocorrelation Matrix')
 
-    gridScore2 = calculate_grid_score(circularMatrix); 
-    
 	subplot(2,2,4)
     plot(rotations, correlations);
     xlim([0 360])
@@ -51,44 +55,38 @@ for i = 1:1
     ylabel('Correlation')
     title('Periodicity')
     
+    % Partitions the correlation periodicity curve and collapses the
+    % partitioned data 
     collapsePartitionData = analyze_periodicity(rotations, correlations);
     
+    maxCollapseValues = zeros(length(collapsePartitionData), 1);
     figure(i*2)
     for j = 1:length(collapsePartitionData)
-        subplot(2,4,j)
-        partitionData = collapsePartitionData{j,2};
-        xr = [repmat(partitionData, 6*collapsePartitionData{j,1}, 1); zeros(1,length(partitionData))];
-        xr = [0 reshape(xr, 1, [])];
+        subplot(3,4,j)
+        nPartitions = collapsePartitionData{j,1};
+        partitionData = collapsePartitionData{j,3};
+        [~,~] = graph_polar_data(nPartitions, partitionData);
         
-        th = linspace(0, 360, length(xr));
-        th = deg2rad(th);
-
-        polar(th, xr);
-        
-        hHiddenText = findall(gca,'type','text');
-        angles = 0:30:330;
-        hObjToDelete = zeros( length(angles)-4, 1 );
-        angleIncrement = 360/collapsePartitionData{j,1}/4;
-        k = 0;
-        for ang = angles
-            hObj = findall(hHiddenText,'string',num2str(ang));
-            switch ang
-                case 0
-                    set(hObj,'string',sprintf('%.1f%c', 0, char(176)));
-                case 90
-                    set(hObj,'string',sprintf('%.1f%c', angleIncrement, char(176)));
-                case 180
-                    set(hObj,'string',sprintf('%.1f%c', angleIncrement*2, char(176)));
-                case 270
-                    set(hObj,'string',sprintf('%.1f%c', angleIncrement*3, char(176)));
-                otherwise
-                    k = k + 1;
-                    hObjToDelete(k) = hObj;
-            end
-        end
-        delete(hObjToDelete);
-
-        title(sprintf('%.1f%c Degree Period', 360/collapsePartitionData{j,1}, char(176)))
+        maxCollapseValues(j) = collapsePartitionData{j,2};
     end
+    
+    subplot(3,4,[9 10 11 12])
+    bar([3 4 5 6 7 8 9 10], maxCollapseValues);
+    xlabel('Number of Partitions')
+    ylabel('Max Collapsed Data Value')
+    
+    % Performs FFT on the correlation matrix 
+    [shiftedSpectrogram, polarSpectrogram, nComponents] = fourier_transform(correlationMatrix);
+    
+%     figure(i*3)
+%     subplot(1,2,1)
+%     imagesc(shiftedSpectrogram)
+%     axis off
+%     title('Fourier Spectogram')
+%     
+%     subplot(1,2,2)
+%     imagesc(polarSpectrogram)
+%     axis off 
+%     title('Polar Fourier Spectogram')
     
 end
