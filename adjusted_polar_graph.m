@@ -2,7 +2,7 @@ function [theta, r] = adjusted_polar_graph(nPartitions, partitionData)
 % Plots a polar bar graph of the collapsed partition data and adjusts the
 % graph's angle labels to match the correct period
 
-% Expands the partition data so data will be plotted as a polar bar graph
+% Expands partitionData so data will be plotted as a bar instead of a point
 r = [repmat(partitionData, 6*nPartitions, 1); zeros(1,length(partitionData))];
 r = [0 reshape(r, 1, [])];
         

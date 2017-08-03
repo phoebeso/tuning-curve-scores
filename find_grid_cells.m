@@ -16,7 +16,7 @@ smoothFiringRate = conv(firingRate,filter,'same');
 load simdata.mat
 
 for i = 1:1
-    rateMap = simdata{4};
+%     rateMap = simdata{2};
 
     % Calculates grid score from the rate map
     [~, gridScore] = find_central_field(rateMap);
@@ -35,7 +35,7 @@ for i = 1:1
     subplot(2,2,1)
     imagesc(rateMap); colorbar
     title('Firing Rate Map')
-    xlabel(['Grid Score: ' num2str(gridScore)])
+    xlabel(['Rate Map Grid Score: ' num2str(gridScore)])
 
     subplot(2,2,2)
     imagesc(correlationMatrix, [-1 1]); colorbar
@@ -51,7 +51,7 @@ for i = 1:1
     plot(rotations, correlations);
     xlim([0 360])
     ylim([-inf 1])
-    xlabel({'Rotation (deg)'; sprintf('Grid Score: %f', gridScore2)})
+    xlabel({'Rotation (deg)'; sprintf('Autocorrelation Matrix Grid Score: %f', gridScore2)})
     ylabel('Correlation')
     title('Periodicity')
     
@@ -65,7 +65,7 @@ for i = 1:1
         subplot(3,4,j)
         nPartitions = collapsePartitionData{j,1};
         partitionData = collapsePartitionData{j,3};
-        [~,~] = graph_polar_data(nPartitions, partitionData);
+        [~,~] = adjusted_polar_graph(nPartitions, partitionData); % Plots graph
         
         maxCollapseValues(j) = collapsePartitionData{j,2};
     end
@@ -78,15 +78,15 @@ for i = 1:1
     % Performs FFT on the correlation matrix 
     [shiftedSpectrogram, polarSpectrogram, nComponents] = fourier_transform(correlationMatrix);
     
-%     figure(i*3)
-%     subplot(1,2,1)
-%     imagesc(shiftedSpectrogram)
-%     axis off
-%     title('Fourier Spectogram')
-%     
-%     subplot(1,2,2)
-%     imagesc(polarSpectrogram)
-%     axis off 
-%     title('Polar Fourier Spectogram')
+    figure(i*3)
+    subplot(1,2,1)
+    imagesc(shiftedSpectrogram)
+    axis off
+    title('Fourier Spectogram')
+    
+    subplot(1,2,2)
+    imagesc(polarSpectrogram)
+    axis off 
+    title('Polar Fourier Spectogram')
     
 end
