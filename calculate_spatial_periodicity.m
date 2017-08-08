@@ -1,10 +1,16 @@
-function [rotations, correlations, shiftedCircularMatrix] = calculate_spatial_periodicity(autocorrelationMatrix)
+function [rotations, correlations, maxShiftedCircularMatrix, maxThreshold] = calculate_spatial_periodicity(autocorrelationMatrix)
 % Given an autocorrelation matrix, crops a circular region and then
 % calculates the spatial periodicity by rotating the autocorrelation matrix
 % in steps of 6 degrees and computing the correlation
 
 % Locates peaks in the autocorrelation matrix and groups them together  
-threshold = 0.4; % This value can be changed, normally 0.1 
+threshold = 0.1; % This value can be changed, normally 0.1
+
+for threshold = 0:0.1:0.4
+maxGridScore = -inf;
+maxThreshold = 0;
+maxShiftedCircularMatrix = autocorrelationMatrix; 
+    
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
 modifiedMatrix(modifiedMatrix > threshold) = 1;
@@ -109,11 +115,24 @@ else
     shiftedCircularMatrix = [verticalAdd; shiftedCircularMatrix]; 
 end
 
+gridScore = calculate_grid_score(shiftedCircularMatrix);
+if gridScore > maxGridScore
+    maxGridScore = gridScore;
+    maxThreshold = threshold; 
+    maxShiftedCircularMatrix = shiftedCircularMatrix; 
+end
+
+if gridScore > 0
+    break
+end
+
+end
+
 % Calculates the correlation every 6 degrees 
 rotations = (0:6:360)';
 correlations = nan(61,1);
 for i = 1:61
-    correlations(i) = calculate_correlation(shiftedCircularMatrix, 6*(i-1));
+    correlations(i) = calculate_correlation(maxShiftedCircularMatrix, 6*(i-1));
 end
 
 end

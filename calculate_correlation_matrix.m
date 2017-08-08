@@ -1,9 +1,9 @@
 function correlationMatrix = calculate_correlation_matrix(matrix1,matrix2,n)
-% Input:mat1, mat2 assumed to be the same size.
+% Input: matrix1, matrix2 assumed to be the same size.
 % n: matrix holding the number of cells joining multiplication in both matrices per time unit.
 % output: correlation matrix
-% If mat2 is not given it is assumed to be like mat1
-% if n is not given it is calculated as the maximum possible
+% If matrix2 is not given it is assumed to be like matrix1
+% If n is not given it is calculated as the maximum possible
 
 if (nargin < 2)
     matrix2 = matrix1;
@@ -48,7 +48,7 @@ j_size = size(matrix2,2);
 for i = 1:2*size(matrix1,1)-1
     for j = 1:2*size(matrix2,2)-1
         sub_mat = work_mat(npad_i+i-floor(i_size):npad_i+i-1, ...
-            npad_j+j-floor(j_size):npad_j+j-1  );
+            npad_j+j-floor(j_size):npad_j+j-1);
         nan_sub_mat = sub_mat .* matrix2;
         notnan_inds = find(~isnan(nan_sub_mat)); % normalized to the number of nontnan components (average)
         
