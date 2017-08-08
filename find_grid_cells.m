@@ -61,7 +61,7 @@ for nFile = 1:length(files)
 
     subplot(2,2,3)
     imagesc(circularMatrix, [-1 1]); colorbar
-    axis off
+    set(gca,'xtick',[],'ytick',[])
     xlabel(sprintf('Threshold: %f', threshold))
     title('Circular Autocorrelation Matrix')
 

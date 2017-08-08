@@ -6,10 +6,10 @@ function [rotations, correlations, maxShiftedCircularMatrix, maxThreshold] = cal
 % Locates peaks in the autocorrelation matrix and groups them together  
 threshold = 0.1; % This value can be changed, normally 0.1
 
-for threshold = 0:0.1:0.4
 maxGridScore = -inf;
 maxThreshold = 0;
 maxShiftedCircularMatrix = autocorrelationMatrix; 
+for threshold = 0.1:0.1:0.3
     
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
