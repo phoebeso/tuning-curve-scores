@@ -1,7 +1,11 @@
-function [hdOccupancy, hdRates, hdScore, xmean, ymean] = calculate_hd_score(direction,spiketrain,dt,nHdBins)
+function [hdOccupancy, hdRates, hdScore] = calculate_hd_score(direction,spiketrain,dt,nHdBins)
 % Calculates the head direction score and tuning curve. Head direction
 % tuning curve calculated by first binning the head directions into 6
 % degree bins. 
+
+% calculating, for the entire trial, the length of the mean vector of firing 
+% rate as a function of direction (directional tuning).
+% http://www.sciencedirect.com/science/article/pii/S0960982213015212
 
 hdBins = (0:2*pi/nHdBins:2*pi-2*pi/nHdBins)'; % Represent left edge of bin
 hdCount = zeros(nHdBins,2); % col 1 = num of times hd bin accessed, col 2 = num of spikes total
@@ -19,19 +23,16 @@ end
 hdOccupancy = hdCount(:,1);
 hdRates = hdCount(:,2) ./ (hdCount(:,1) .* dt); % vector with spikerates for each hd bin
 
-normalizedHdRates = hdRates ./ max(hdRates); 
-
 % convert coordinates from polar to rectangular form
-x = normalizedHdRates .* cos(hdBins);
-y = normalizedHdRates .* sin(hdBins);
+x = hdRates .* cos(hdBins);
+y = hdRates .* sin(hdBins);
+sumLength = sum(sqrt(x.^2 + y.^2));
 
-% obtain length
-xmean = sum((normalizedHdRates ./ max(normalizedHdRates)) .* x) / sum(x ~= 0);
-ymean = sum((normalizedHdRates ./ max(normalizedHdRates)) .* y) / sum(y ~= 0);
-xmean = sum(x) / sum(x ~= 0);
-ymean = sum(y) / sum(y ~= 0);
-xmean = sum(x);
-ymean = sum(y);
-hdScore = sqrt(xmean^2 + ymean^2);
+% computes sum vector
+rx = sum(x);
+ry = sum(y);
+rLength = sqrt(rx^2 + ry^2);
+
+hdScore = rLength / sumLength; 
 
 end

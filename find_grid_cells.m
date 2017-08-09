@@ -108,9 +108,9 @@ for nFile = 1:length(files)
     title('Polar Fourier Spectogram')
     
     % Saves and closes figures
-    mkdir(['Figures/' name])
-    saveas(figure1,[pwd sprintf('/Figures/%s/Grid 1.fig',name)]);
-    saveas(figure2,[pwd sprintf('/Figures/%s/Grid 2.fig',name)]);
-    saveas(figure3,[pwd sprintf('/Figures/%s/Grid 3.fig',name)]);
+    mkdir(['Sargolini Output/' name])
+    saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Grid 1.fig',name)]);
+    saveas(figure2,[pwd sprintf('/Sargolini Output/%s/Grid 2.fig',name)]);
+    saveas(figure3,[pwd sprintf('/Sargolini Output/%s/Grid 3.fig',name)]);
     close all
 end

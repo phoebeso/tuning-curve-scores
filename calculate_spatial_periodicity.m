@@ -9,7 +9,7 @@ threshold = 0.1; % This value can be changed, normally 0.1
 maxGridScore = -inf;
 maxThreshold = 0;
 maxShiftedCircularMatrix = autocorrelationMatrix; 
-for threshold = 0.1:0.1:0.4
+for threshold = 0.1:0.1:0.4 % Threshold can be any value between 0 and 1, but normally 0.1 is OK 
     
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
@@ -92,7 +92,6 @@ mask2 = double(mask2);
 mask3 = mask1 & mask2;
 mask3 = double(mask3);
 mask3(mask3 == 0) = NaN;
-
 circularMatrix = autocorrelationMatrix .* mask3;
  
 % Concatanates nan vectors horizontally and vertically to center the

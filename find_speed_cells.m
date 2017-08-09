@@ -69,8 +69,6 @@ for p = 1:numCells
 end
 
 sig_percentile = prctile(shifted_speed_scores(:,2),99);
-% speed_cells_idx = find(shifted_speed_scores(:,2) > sig_percentile);
-% speed_cells = unique(shifted_speed_scores(speed_cells_idx,1));
 speed_cells = find(speed_scores > sig_percentile);
 
 save speed_cell_data.mat

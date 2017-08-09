@@ -63,6 +63,7 @@ CM = maxDistance;
 
 % Calculates DM
 [row, col] = find(modifiedRateMap == longestField);
+% [row, col] = find(modifiedRateMap ~= 0); 
 nPixels = length(row);
 totalDistance = 0;
 for i = 1:nPixels
