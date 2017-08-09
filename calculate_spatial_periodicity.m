@@ -9,7 +9,7 @@ threshold = 0.1; % This value can be changed, normally 0.1
 maxGridScore = -inf;
 maxThreshold = 0;
 maxShiftedCircularMatrix = autocorrelationMatrix; 
-for threshold = 0.1:0.1:0.3
+for threshold = 0.1:0.1:0.4
     
 modifiedMatrix = autocorrelationMatrix;
 modifiedMatrix(modifiedMatrix <= threshold | isnan(modifiedMatrix)) = 0;
@@ -120,10 +120,6 @@ if gridScore > maxGridScore
     maxGridScore = gridScore;
     maxThreshold = threshold; 
     maxShiftedCircularMatrix = shiftedCircularMatrix; 
-end
-
-if gridScore > 0
-    break
 end
 
 end
