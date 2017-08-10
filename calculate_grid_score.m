@@ -16,6 +16,5 @@ correlation150 = calculate_correlation(rateMap, 150);
 peaks = [correlation60 correlation120];
 troughs = [correlation30 correlation90 correlation150];
 gridScore = min(peaks) - max(troughs);
-% gridScore = mean(peaks) - mean(troughs);
 
 end

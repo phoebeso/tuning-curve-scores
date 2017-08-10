@@ -47,11 +47,15 @@ if nargin < 3 || isempty(d)
     d = 0;
 end
 
-% compute weighted sum of cos and sin of angles
-r = sum(w .* exp(1i * alpha), dim);
+% convert coordinates from polar to rectangular form
+theta = (0:2*pi/60:2*pi-(2*pi/60))';
+x = alpha .* cos(theta);  
+y = alpha .* sin(theta);
 
-% obtain length 
-r = abs(r) ./ sum(w, dim);
+% obtain length
+xmean = mean(x);
+ymean = mean(y);
+r = sqrt(xmean^2 + ymean^2);
 
 % for data with known spacing, apply correction factor to correct for bias
 % in the estimation of r (see Zar, p. 601, equ. 26.16)

@@ -7,7 +7,6 @@
 clear all; clc; 
 
 files = dir('SargoliniMoser2006');
-% files = dir('HaftingMoser2008');
 
 nHdBins = 60;
 
@@ -23,7 +22,6 @@ for nFile = 1:length(files)
     end
     
     fullFileName = fullfile('SargoliniMoser2006', filename);
-%     fullFileName = fullfile('HaftingMoser2008', filename);
     load(fullFileName)
     
     dt = t(3)-t(2);
@@ -59,8 +57,6 @@ for nFile = 1:length(files)
     
     mkdir(['Sargolini Output/' name])
     saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Head Direction 1.fig',name)]);
-%     mkdir(['Hafting Output/' name])
-%     saveas(figure1,[pwd sprintf('/Hafting Output/%s/Head Direction 1.fig',name)]);
     close all
     
 end
@@ -95,5 +91,3 @@ hdCellsIdx = find(cell2mat(cellData(:,4)) > sigPercentile);
 hdCells = cellData(hdCellsIdx, 1);
 
 save('Sargolini Output/hd_cell_data.mat', 'hdCells', 'sigPercentile', 'cellData')
-% save('Hafting Output/hd_cell_data.mat', 'hdCells', 'sigPercentile', 'cellData')
-

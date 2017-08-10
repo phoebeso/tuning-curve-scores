@@ -1,6 +1,6 @@
 function [tuning_curve] = calculate_2d_tuning_curve(variable_x,variable_y,fr,numBin,minVal,maxVal)
-
-% this assumes that the 2d environment is a square box, and that the
+% Calculates a 2d spatial rate map 
+% Assumes that the 2d environment is a square box, and that the
 % variable is recorded along the x- and y-axes
 
 %% define the axes and initialize variables
