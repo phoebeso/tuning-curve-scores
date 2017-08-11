@@ -11,7 +11,7 @@ files = dir('SargoliniMoser2006');
 nHdBins = 60;
 
 % col 1 is cell file name, col 2 is direction, col 3 is spiketrain, col 4 is hd score
-cellData = cell(length(files), 4); 
+cellData = cell(length(files), 4);
 
 for nFile = 1:length(files)
     file = files(nFile);
@@ -19,7 +19,7 @@ for nFile = 1:length(files)
     [~,name,ext] = fileparts(filename);
     if (~strcmp(ext, '.mat'))
         continue
-    end
+    end    
     
     fullFileName = fullfile('SargoliniMoser2006', filename);
     load(fullFileName)
@@ -31,16 +31,16 @@ for nFile = 1:length(files)
     direction = atan2(y2-y1,x2-x1)+pi/2;
     direction(direction < 0) = direction(direction<0)+2*pi; % go from 0 to 2*pi, without any negative numbers
     
-%     calculate hd tuning curve and score
+    % calculate hd tuning curve and score
     [hdOccupancy, hdRates, hdScore] = calculate_hd_score(direction,spiketrain,dt,nHdBins); % hd score
     
-%     Store cell data for shuffling procedure
+    % Store cell data for shuffling procedure
     cellData{nFile, 1} = name; 
     cellData{nFile, 2} = direction;
     cellData{nFile, 3} = spiketrain;
     cellData{nFile, 4} = hdScore;
     
-%     Graph and save tuning and occupancy curves
+    % Graph and save tuning and occupancy curves
     hdBins = (0:2*pi/nHdBins:2*pi)';
     
     figure1 = figure(1);
