@@ -1,8 +1,8 @@
-function [fourierSpectrogram, polarSpectrogram, nComponents] = fourier_transform(matrix, meanFr, spiketrain, dt, posx, posy)
+function [fourierSpectrogram, polarSpectrogram, nComponents] = fourier_transform(rateMap, meanFr, spiketrain, dt, posx, posy)
 
-fourierSpectrogram = fft2(matrix,256,256);
+fourierSpectrogram = fft2(rateMap,256,256);
 fourierSpectrogram = abs(fftshift(fourierSpectrogram)); % Matrix values represent power of Fourier spectrum
-fourierSpectrogram = fourierSpectrogram ./ (meanFr * length(matrix));
+fourierSpectrogram = fourierSpectrogram ./ (meanFr * sqrt(size(rateMap, 1) * size(rateMap, 2)));
 
 maxPower = max(fourierSpectrogram(:));
 
@@ -17,30 +17,48 @@ for i = 1:100
         
     shiftedRateMap = compute_2d_tuning_curve(posx,posy,shiftedFiringRate,20,0,100);
     shiftedRateMap = shiftedRateMap - mean(shiftedRateMap(:));
-    fourierSpectrogram2 = fft2(shiftedRateMap,256,256);
-    fourierSpectrogram2 = abs(fftshift(fourierSpectrogram2)); % Matrix values represent power of Fourier spectrum
-    fourierSpectrogram2 = fourierSpectrogram2 ./ (meanFr * length(shiftedRateMap));
-    shiftedPower(i) = max(fourierSpectrogram2(:));
+    shiftedFourier = fft2(shiftedRateMap,256,256);
+    shiftedFourier = abs(fftshift(shiftedFourier)); % Matrix values represent power of Fourier spectrum
+    shiftedFourier = shiftedFourier ./ (meanFr * sqrt(size(shiftedRateMap, 1) * size(shiftedRateMap, 2)));
+    shiftedPower(i) = max(shiftedFourier(:));
 end
-
-threshold1 = prctile(shiftedPower, 50);
 
 % Reduces effects of noise by subtracting the 50th percentile value of
 % power from the Fourier spectrogram
-% reshapeMatrix = reshape(fourierSpectrogram, [], 1);
-% % threshold1 = prctile(reshapeMatrix, 50);
-% threshold1 = maxPower * 0.5;
+threshold1 = prctile(shiftedPower, 50);
 polarSpectrogram = fourierSpectrogram - threshold1;
 polarSpectrogram(polarSpectrogram < 0) = 0;
 
 % Excludes spatial sub-harmonic frequencies
 threshold2 = max(polarSpectrogram(:)) * 0.1;
-modifiedMatrix = polarSpectrogram;
-modifiedMatrix(modifiedMatrix <= threshold2) = 0;
-modifiedMatrix(modifiedMatrix > threshold2) = 1;
-modifiedMatrix = bwlabel(modifiedMatrix); % IDs the peaks 
+mainComponents = polarSpectrogram;
+mainComponents(mainComponents <= threshold2) = 0;
 
-nComponents = max(modifiedMatrix(:));
+% mainComponents(mainComponents > threshold2) = 1;
+% mainComponents = bwlabel(mainComponents); % IDs the peaks 
+
+% nComponents = max(mainComponents(:));
+
+rhoArray = zeros(361, 1);
+for j = 1:length(mainComponents) % row
+    for k = 1:length(mainComponents) % col
+        y = 128.5 - j;
+        x = k - 128.5;
+        if x > 0
+            if y > 0
+                theta = round(rad2deg(atan(y/x)));
+            else
+                theta = round(rad2deg(atan(y/x) + 2*pi));
+            end
+        else
+            theta = round(rad2deg(atan(y/x) + pi));
+        end
+        rho = mainComponents(j,k);
+        rhoArray(theta + 1) = max(rhoArray(theta+1), rho);
+    end
+end
+
+angles = 0:360;
 
 end
 
