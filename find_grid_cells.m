@@ -5,9 +5,7 @@ clear all; clc
 % Loop through and load files from folder
 files = dir('SargoliniMoser2006');
 
-% files = dir('HaftingMoser2008');
-
-for nFile = 35 %1:length(files)
+for nFile = 1:length(files)
     file = files(nFile);
     filename = file.name;
     [~,name,ext] = fileparts(filename);
@@ -42,10 +40,6 @@ for nFile = 35 %1:length(files)
     dt = t(3) - t(2);
     timebins = [t; (t(end) + dt)];
     spiketrain = histcounts(ts, timebins)'; 
-    
-%     dt = post(3) - post(2);
-%     timebins = [post; (post(end) + dt)];
-%     spiketrain = histcounts(ts, timebins)';
 
     boxSize = 100; % Length in cm of one side of the environment
     nPosBins = 20; % Each position bin is 5 x 5 cm 
@@ -55,11 +49,10 @@ for nFile = 35 %1:length(files)
     smoothFiringRate = conv(firingRate,filter,'same');
 
     [rateMap] = compute_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
-    
     rateMap(isnan(rateMap)) = 0;
 
     % Calculates grid score from the rate map
-    [~, gridScore] = find_central_field(rateMap);
+%     [~, gridScore] = find_central_field(rateMap);
 
     % Calculates the correlation matrix from the rate map
     correlationMatrix = calculate_correlation_matrix(rateMap);
@@ -69,13 +62,13 @@ for nFile = 35 %1:length(files)
     [rotations, correlations, circularMatrix, threshold] = calculate_spatial_periodicity(correlationMatrix);
     
     % Calculates grid score from the correlation matrix
-    gridScore2 = calculate_grid_score(circularMatrix);
+    gridScore = calculate_grid_score(circularMatrix);
     
     figure1 = figure(1);
     subplot(2,2,1)
     imagesc(rateMap); colorbar
+    axis off
     title('Firing Rate Map')
-    xlabel(['Rate Map Grid Score: ' num2str(gridScore)])
 
     subplot(2,2,2)
     imagesc(correlationMatrix, [-1 1]); colorbar
@@ -92,7 +85,7 @@ for nFile = 35 %1:length(files)
     plot(rotations, correlations);
     xlim([0 360])
     ylim([-inf 1])
-    xlabel({'Rotation (deg)'; sprintf('Autocorrelation Matrix Grid Score: %f', gridScore2)})
+    xlabel({'Rotation (deg)'; sprintf('Autocorrelation Matrix Grid Score: %f', gridScore)})
     ylabel('Correlation')
     title('Periodicity')
     
@@ -120,23 +113,31 @@ for nFile = 35 %1:length(files)
     % Calculates the two-dimensional Fourier spectrogram 
     adjustedRateMap = rateMap - mean(rateMap(:));
     meanFr = sum(spiketrain) / t(end);
-    [fourierSpectrogram, polarSpectrogram, nComponents] = fourier_transform(adjustedRateMap, meanFr, spiketrain, dt, posx, posy);
+    [fourierSpectrogram, polarSpectrogram, rhoMeanPower, superimpose, maxPower, nComponents] = fourier_transform(adjustedRateMap, meanFr, spiketrain, dt, posx, posy);
     
     figure3 = figure(3);
-    subplot('Position', [0.05 0.30 0.40 0.40])
+    subplot(2,2,1)
     imagesc(fourierSpectrogram)
-    axis off
+    set(gca, 'XTick', [], 'YTick', []);
+    xlabel(['Maximum Power: ' num2str(maxPower)])
     title('Fourier Spectogram')
     
-    subplot('Position', [0.55 0.30 0.40 0.40])
+    subplot(2,2,2)
     imagesc(polarSpectrogram)
-    axis off 
+    set(gca, 'XTick', [], 'YTick', []);
+    xlabel(['Number of Main Components: ' num2str(nComponents)])
     title('Polar Fourier Spectogram')
     
+    subplot(2,2,3)
+    polar(deg2rad((0:360)'),rhoMeanPower)
+    title('Fourier Polar Plot')
+    hold on
+    polar(deg2rad(superimpose{1}), superimpose{2})
+
     % Saves and closes figures
     mkdir(['Sargolini Output/' name])
-    saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Grid 1.fig',name)]);
-    saveas(figure2,[pwd sprintf('/Sargolini Output/%s/Grid 2.fig',name)]);
-    saveas(figure3,[pwd sprintf('/Sargolini Output/%s/Grid 3.fig',name)]);
+    saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Grid-Grid Scoring.fig',name)]);
+    saveas(figure2,[pwd sprintf('/Sargolini Output/%s/Grid-Partitions.fig',name)]);
+    saveas(figure3,[pwd sprintf('/Sargolini Output/%s/Grid-Fourier Transform.fig',name)]);
     close all
 end
