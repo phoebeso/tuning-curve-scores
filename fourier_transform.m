@@ -1,4 +1,4 @@
-function [fourierSpectrogram, polarSpectrogram, smoothRho, superimpose, maxPower, nComponents] = fourier_transform(rateMap, meanFr, spiketrain, dt, posx, posy)
+function [fourierSpectrogram, polarSpectrogram, smoothRho, superimpose, beforeMaxPower, afterMaxPower, nComponents, shiftedPower] = fourier_transform(rateMap, meanFr, spiketrain, dt, posx, posy)
 % Calculates the Fourier Spectrogram of a given rate map and determines the
 % main components and polar distribution
 
@@ -6,10 +6,12 @@ function [fourierSpectrogram, polarSpectrogram, smoothRho, superimpose, maxPower
 % Periodic Bands, Krupic et al 2012
 
 fourierSpectrogram = fft2(rateMap,256,256);
+beforeMaxPower = max(abs(fftshift(fourierSpectrogram(:))));
+
 fourierSpectrogram = fourierSpectrogram ./ (meanFr * sqrt(size(rateMap, 1) * size(rateMap, 2)));
 fourierSpectrogram = abs(fftshift(fourierSpectrogram)); % Matrix values represent power of Fourier spectrum
 
-maxPower = max(fourierSpectrogram(:));
+afterMaxPower = max(fourierSpectrogram(:));
 
 shiftedPower = zeros(100,1);
 for i = 1:100
@@ -21,8 +23,10 @@ for i = 1:100
     shiftedFiringRate = shiftedSpiketrain ./ dt; 
         
     shiftedRateMap = compute_2d_tuning_curve(posx,posy,shiftedFiringRate,20,0,100);
-    shiftedRateMap(isnan(shiftedRateMap)) = 0; 
-    shiftedRateMap = shiftedRateMap - mean(shiftedRateMap(:));
+    shiftedRateMap = shiftedRateMap - nanmean(shiftedRateMap(:));
+    
+    shiftedRateMap(isnan(shiftedRateMap)) = 0; % Converts all NaNs to zeros for FFT calculation
+    
     shiftedFourier = fft2(shiftedRateMap,256,256);
     shiftedFourier = shiftedFourier ./ (meanFr * sqrt(size(shiftedRateMap, 1) * size(shiftedRateMap, 2)));
     shiftedFourier = abs(fftshift(shiftedFourier)); % Matrix values represent power of Fourier spectrum
@@ -41,8 +45,10 @@ mainComponents = polarSpectrogram;
 mainComponents(mainComponents <= threshold2) = 0;
 
 % Calculates the average power along every orientation of the polar spectrogram 
-rhoMatrix = zeros(361, 2);
-for j = 1:length(mainComponents) % row
+rhoMatrix = zeros(180, 2);
+% rhoMatrix = zeros(361,2);
+% only look at top half because of symmetry
+for j = 1:length(mainComponents) / 2 % row
     for k = 1:length(mainComponents) % col
         y = 128.5 - j;
         x = k - 128.5;
@@ -56,7 +62,7 @@ for j = 1:length(mainComponents) % row
             theta = floor(rad2deg(atan(y/x) + pi));
         end
         rho = mainComponents(j,k);
-        if rho ~= 0
+        if (rho ~= 0 && ~isnan(rho))
             rhoMatrix(theta+1,1) = rhoMatrix(theta+1,1) + rho;
             rhoMatrix(theta+1,2) = rhoMatrix(theta+1,2) + 1;
         end
@@ -70,19 +76,24 @@ rhoMeanPower(isnan(rhoMeanPower)) = 0;
 gaussFilter = gausswin(17);
 gaussFilter = gaussFilter / sum(gaussFilter);
 smoothRho = conv(rhoMeanPower, gaussFilter,'same');
+smoothRho = [smoothRho; smoothRho; smoothRho(1)]; 
 
 % Finds peaks in polar Fourier spectrogram and don't count peaks within 10 
 % degrees of a larger peak 
 [peaks, locs] = findpeaks(smoothRho);
 mainPeaks = []; mainLocs = [];
 for loc = locs'
+    if (loc > 180)
+        continue
+    end
+    
     % Determines range of angles to look for neighboring peaks in
     % Wraps angles between 0 and 360
-    minAngle = loc - 10;
+    minAngle = loc - 15;
     if minAngle < 0
         minAngle = minAngle + 360;
     end
-    maxAngle = loc + 10; 
+    maxAngle = loc + 15; 
     if maxAngle > 360
         maxAngle = maxAngle - 360;
     end
@@ -93,18 +104,17 @@ for loc = locs'
         neighborPeaks = peaks((locs >= minAngle & locs <= 360) | (locs >= 0 & locs <= maxAngle));
     end
     
-    % Only count highest peak in 10 degree range
+    % Only count highest peak in 15 degree range
     highestPeak = max(neighborPeaks);
-    highestLoc = locs(peaks == highestPeak);
-    
-    if (highestLoc > 180)
-        continue
-    end
+    highestLoc = min(locs(peaks == highestPeak));
     
     mainPeaks = [mainPeaks highestPeak];
     mainLocs = [mainLocs highestLoc];
 end
-nComponents = length(mainPeaks);
+mainPeaks = unique(mainPeaks);
+mainLocs = unique(mainLocs);
+nComponents = length(mainLocs);
+mainPeaks(mainPeaks ~= 0) = 4;
 
 superimposeTheta = kron(mainLocs - 1, [0 1]);
 superimposeRho = kron(mainPeaks, [0 1]);

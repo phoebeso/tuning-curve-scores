@@ -84,7 +84,6 @@ for i = 1:length(cellData)
     
 end
 
-
 % determines 95th percentile of cells 
 sigPercentile = prctile(shiftedHdScores,95);
 hdCellsIdx = find(cell2mat(cellData(:,4)) > sigPercentile);
