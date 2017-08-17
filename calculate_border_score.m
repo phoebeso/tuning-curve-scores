@@ -79,17 +79,20 @@ CM = maxDistance;
 nPixels = length(row);
 totalDistance = 0;
 for i = 1:nPixels
-    if maxIdx == 1 || maxIdx == 3
-        wall = 1;
-    else
-        wall = length(rateMap);
-    end
+%     if maxIdx == 1 || maxIdx == 3
+%         wall = 1;
+%     else
+%         wall = length(rateMap);
+%     end
+%     
+%     if maxIdx == 1 || maxIdx == 2
+%         distance = abs(col(i) - wall);
+%     else
+%         distance = abs(row(i) - wall);
+%     end
     
-    if maxIdx == 1 || maxIdx == 2
-        distance = abs(col(i) - wall);
-    else
-        distance = abs(row(i) - wall);
-    end
+    distance = min([abs(col(i) - 1) abs(col(i) - length(rateMap)) ... 
+                    abs(row(i) - 1) abs(row(i) - length(rateMap))]);
     
     totalDistance = totalDistance + distance;
 end
