@@ -1,4 +1,4 @@
-function [fourierSpectrogram, polarSpectrogram, smoothRho, superimpose, beforeMaxPower, afterMaxPower, nComponents, shiftedPower] = fourier_transform(rateMap, meanFr, spiketrain, dt, posx, posy)
+function [fourierSpectrogram, polarSpectrogram, smoothRho, superimpose, beforeMaxPower, maxPower, nComponents, shiftedMaxPowers] = fourier_transform(rateMap, meanFr, spiketrain, dt, posx, posy)
 % Calculates the Fourier Spectrogram of a given rate map and determines the
 % main components and polar distribution
 
@@ -11,9 +11,9 @@ beforeMaxPower = max(abs(fftshift(fourierSpectrogram(:))));
 fourierSpectrogram = fourierSpectrogram ./ (meanFr * sqrt(size(rateMap, 1) * size(rateMap, 2)));
 fourierSpectrogram = abs(fftshift(fourierSpectrogram)); % Matrix values represent power of Fourier spectrum
 
-afterMaxPower = max(fourierSpectrogram(:));
+maxPower = max(fourierSpectrogram(:));
 
-shiftedPower = zeros(100,1);
+shiftedMaxPowers = zeros(100,1);
 for i = 1:100
     minShift = ceil(20/dt); % min shift is 20 s
     maxShift = length(spiketrain)-(20/dt); % max shift is length of trial minus 20 s 
@@ -30,12 +30,12 @@ for i = 1:100
     shiftedFourier = fft2(shiftedRateMap,256,256);
     shiftedFourier = shiftedFourier ./ (meanFr * sqrt(size(shiftedRateMap, 1) * size(shiftedRateMap, 2)));
     shiftedFourier = abs(fftshift(shiftedFourier)); % Matrix values represent power of Fourier spectrum
-    shiftedPower(i) = max(shiftedFourier(:));
+    shiftedMaxPowers(i) = max(shiftedFourier(:));
 end
 
 % Reduces effects of noise by subtracting the 50th percentile value of
 % power from the Fourier spectrogram
-threshold1 = prctile(shiftedPower, 50);
+threshold1 = prctile(shiftedMaxPowers, 50);
 polarSpectrogram = fourierSpectrogram - threshold1;
 polarSpectrogram(polarSpectrogram < 0) = 0;
 
@@ -114,7 +114,7 @@ end
 mainPeaks = unique(mainPeaks);
 mainLocs = unique(mainLocs);
 nComponents = length(mainLocs);
-mainPeaks(mainPeaks ~= 0) = 4;
+mainPeaks(mainPeaks ~= 0) = ceil(max(mainPeaks));
 
 superimposeTheta = kron(mainLocs - 1, [0 1]);
 superimposeRho = kron(mainPeaks, [0 1]);

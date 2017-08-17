@@ -1,9 +1,11 @@
-% Calculates and analyzes the gridness of each cell 
+% Calculates and analyzes the gridness and spatial periodicity of cells. 
 
 clear all; clc
 
-% Loop through and load files from folder
 files = dir('SargoliniMoser2006');
+
+boxSize = 100; % Length in cm of one side of the environment
+nPosBins = 20; % Each position bin is 5 x 5 cm 
 
 % col 1 is cell file name, col 2 is smoothed rate map, col 3 is correlation
 % matrix, col 4 is circular matrix, cell 5 rotational correlations, cell 6
@@ -12,6 +14,7 @@ files = dir('SargoliniMoser2006');
 % 10 is array of max power of 100 shifted cells, col 11 is max power 
 cellData = cell(length(files), 11);
 
+% Loops through files from folder
 for nFile = 1:length(files)
     file = files(nFile);
     filename = file.name;
@@ -35,23 +38,22 @@ for nFile = 1:length(files)
     timebins = [t; (t(end) + dt)];
     spiketrain = histcounts(ts, timebins)'; 
 
-    boxSize = 100; % Length in cm of one side of the environment
-    nPosBins = 20; % Each position bin is 5 x 5 cm 
-
     % Smooths firing rate
     filter = gaussian(-4:4,2,0); filter = filter / sum(filter); 
     firingRate = spiketrain / dt;
     smoothFiringRate = conv(firingRate,filter,'same');
 
-    % Calculates the unsmoothed and smoothed rate map 
-    [rateMap, smoothRateMap] = calculate_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
+    % Calculates the unsmoothed and smoothed rate map
+    % Smoothed rate map used for correlation calculations, unsmoothed rate
+    % map used for fourier analysis
+    [unsmoothRateMap, smoothRateMap] = calculate_2d_tuning_curve(posx,posy,smoothFiringRate,nPosBins,0,boxSize);
     
     % Converts all NaNs to zeros otherwise future calculations get thrown
     % off, not sure if this should be done 
-    rateMap(isnan(rateMap)) = 0;
+    unsmoothRateMap(isnan(unsmoothRateMap)) = 0;
     smoothRateMap(isnan(smoothRateMap)) = 0;
     
-    % Calculates the correlation matrix from the rate map
+    % Calculates the correlation matrix from the smoothed rate map
     correlationMatrix = calculate_correlation_matrix(smoothRateMap);
     
     % Determines the spatial periodicity of the correlation matrix by
@@ -63,7 +65,7 @@ for nFile = 1:length(files)
     
     % Plots rate map, autocorrelation matrix, spatial periodicity, and grid
     % score data 
-    figure1 = figure(1);
+    figure1 = figure('Name', sprintf('%s Grid Scoring', name), 'Numbertitle', 'off');
     subplot(2,2,1)
     imagesc(smoothRateMap); colorbar
     axis off
@@ -94,12 +96,11 @@ for nFile = 1:length(files)
     
     % Plots polar histograms of the collapsed partitioned data 
     maxCollapseValues = zeros(length(collapsePartitionData), 1);
-    figure2 = figure(2);
+    figure2 = figure('Name', sprintf('%s Partitions', name), 'Numbertitle', 'off');
     for k = 1:length(collapsePartitionData)
         subplot(3,4,k)
         nPartitions = collapsePartitionData{k,1};
         partitionData = collapsePartitionData{k,3};
-%         plot_adjusted_polar_graph % Plots graph
         [~,~] = adjusted_polar_graph(nPartitions, partitionData); % Plots partition graphs
         
         maxCollapseValues(k) = collapsePartitionData{k,2};
@@ -124,18 +125,20 @@ for nFile = 1:length(files)
     ylabel('Max Collapsed Data Value')
     
     % Calculates the two-dimensional Fourier spectrogram 
-    adjustedRateMap = rateMap - nanmean(rateMap(:));
+    adjustedRateMap = unsmoothRateMap - nanmean(unsmoothRateMap(:));
     meanFr = sum(spiketrain) / t(end);
-    maxRate = max(rateMap(:));
+    maxRate = max(unsmoothRateMap(:));
     maxAdjustedRate = max(adjustedRateMap(:));
-    [fourierSpectrogram, polarSpectrogram, rhoMeanPower, superimpose, beforeMaxPower, afterMaxPower, nComponents, shiftedPowers] = fourier_transform(adjustedRateMap, meanFr, spiketrain, dt, posx, posy);
+    [fourierSpectrogram, polarSpectrogram, rhoMeanPower, superimpose, beforeMaxPower, maxPower, nComponents, shiftedMaxPowers] = ...
+        fourier_transform(adjustedRateMap, meanFr, spiketrain, dt, posx, posy);
     
-    figure3 = figure(3);
+    % Plots fourier analysis 
+    figure3 = figure('Name', sprintf('%s Fourier Transform', name), 'Numbertitle', 'off');
     subplot(2,2,1)
     imagesc(fourierSpectrogram)
     set(gca, 'XTick', [], 'YTick', []);
-    xlabel({sprintf('Max Rate of Unsmoothed Rate Map: %.3f | Mean Rate: %.3f | Max Rate of Unsmooted Adjusted Rate Map: %.3f', maxRate, nanmean(rateMap(:)), maxAdjustedRate); ...
-            sprintf('Before Normalize Max Power: %.3f | Firing Rate Mean: %.3f | After Normalize Max Power: %.3f', beforeMaxPower, meanFr, afterMaxPower)})
+    xlabel({sprintf('Max Rate of Unsmoothed Rate Map: %.3f | Mean Rate: %.3f | Max Rate of Unsmooted Adjusted Rate Map: %.3f', maxRate, nanmean(unsmoothRateMap(:)), maxAdjustedRate); ...
+            sprintf('Before Normalize Max Power: %.3f | Firing Rate Mean: %.3f | After Normalize Max Power: %.3f', beforeMaxPower, meanFr, maxPower)})
     title('Fourier Spectogram')
     
     subplot(2,2,2)
@@ -144,13 +147,21 @@ for nFile = 1:length(files)
     xlabel(['Number of Main Components: ' num2str(nComponents)])
     title('Polar Fourier Spectogram')
     
+    if ceil(max(rhoMeanPower)) == 0
+        rmax = 1;
+    else
+        rmax = ceil(max(rhoMeanPower));
+    end
     subplot(2,2,3)
-    polar(deg2rad((0:360)'),rhoMeanPower)
+%     polar(deg2rad((0:360)'),rhoMeanPower)
+    polar_modified(deg2rad((0:360)'),rhoMeanPower, rmax)
     title('Fourier Polar Plot')
     hold on
-    polar(deg2rad(superimpose{1}), superimpose{2})
+%     polar(deg2rad(superimpose{1}), superimpose{2})
+    polar_modified(deg2rad(superimpose{1}), superimpose{2}, rmax)
     hold off
     
+    % Stores data into cell array
     cellData{nFile, 1} = name;
     cellData{nFile, 2} = smoothRateMap;
     cellData{nFile, 3} = correlationMatrix;
@@ -160,10 +171,10 @@ for nFile = 1:length(files)
     cellData{nFile, 7} = maxNumPartitions;
     cellData{nFile, 8} = fourierSpectrogram;
     cellData{nFile, 9} = polarSpectrogram;
-    cellData{nFile, 10} = shiftedPowers;
-    cellData{nFile, 11} = afterMaxPower; 
+    cellData{nFile, 10} = shiftedMaxPowers;
+    cellData{nFile, 11} = maxPower; 
 
-%     Saves and closes figures
+    % Saves and closes figures
     mkdir(['Sargolini Output/' name])
     saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Grid-Grid Scoring.fig',name)]);
     saveas(figure2,[pwd sprintf('/Sargolini Output/%s/Grid-Partitions.fig',name)]);
@@ -174,9 +185,12 @@ end
 % Removes empty cells from cell array
 cellData(all(cellfun(@isempty,cellData),2), : ) = [];
 
+% Finds grid cells, defined as cells with positive grid scores
 gridCellsIdx = find(cell2mat(cellData(:,6)) > 0);
 gridCells = cellData(gridCellsIdx, 1);
 
+% Finds spatially periodic cells, defined as cells where the fourier 
+% spectrogram has a max power greater than the 95th percentile of shifted data 
 sigPercentile = prctile(cell2mat(cellData(:,10)), 95);
 periodicCellsIdx = find(cell2mat(cellData(:,11)) > sigPercentile);
 periodicCells = cellData(periodicCellsIdx, 1);

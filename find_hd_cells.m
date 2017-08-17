@@ -43,7 +43,7 @@ for nFile = 1:length(files)
     % Graph and save tuning and occupancy curves
     hdBins = (0:2*pi/nHdBins:2*pi)';
     
-    figure1 = figure(1);
+    figure1 = figure('Name', sprintf('%s Head Direction', name), 'Numbertitle', 'off');
     subplot('Position', [0.05 0.30 0.40 0.40])
     hdCurve = [hdRates; hdRates(1)];
     polar(hdBins, hdCurve);
@@ -53,10 +53,10 @@ for nFile = 1:length(files)
     subplot('Position', [0.55 0.30 0.40 0.40])
     hdCount = [hdOccupancy; hdOccupancy(1)];
     polar(hdBins, hdCount);
-    title('Amount of time rat raced each direction')
+    title('Amount of time rat faced each direction')
     
     mkdir(['Sargolini Output/' name])
-    saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Head Direction 1.fig',name)]);
+    saveas(figure1,[pwd sprintf('/Sargolini Output/%s/Head Direction.fig',name)]);
     close all
     
 end

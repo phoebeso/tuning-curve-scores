@@ -24,7 +24,7 @@ modifiedRateMap = bwlabel(modifiedRateMap);
 % Calculates CM
 nFields = max(modifiedRateMap(:));
 maxDistance = 0;
-longestField = 0;
+longestFieldId = 0;
 maxIdx = 0;
 for i = 1:nFields
     % Determines number of adjacent pixels to a wall in a firing field
@@ -38,22 +38,34 @@ for i = 1:nFields
     end
     
     % Calculates length of pixels along each wall 
-    [rowLeftPixels, ~] = find(fieldCol == 1); % pixels along vertical left wall
+    rowLeftPixels = fieldRow(fieldCol == 1); % pixels along vertical left wall
     leftDistance = abs(max(rowLeftPixels) - min(rowLeftPixels));
+    if isempty(leftDistance)
+        leftDistance = 0;
+    end
     
-    [rowRightPixels, ~] = find(fieldCol == length(rateMap)); % pixels along vertical right wall
+    rowRightPixels = fieldRow(fieldCol == length(rateMap)); % pixels along vertical right wall
     rightDistance = abs(max(rowRightPixels) - min(rowRightPixels));
+    if isempty(rightDistance)
+        rightDistance = 0;
+    end
     
-    [~, colTopPixels] = find(fieldRow == 1); % pixels along horizontal top wall
+    colTopPixels = fieldCol(fieldRow == 1); % pixels along horizontal top wall
     topDistance = abs(max(colTopPixels) - min(colTopPixels));
+    if isempty(topDistance)
+        topDistance = 0;
+    end
     
-    [~, colBottomPixels] = find(fieldRow == length(rateMap)); % pixels along horizontal bottom wall
+    colBottomPixels = fieldCol(fieldRow == length(rateMap)); % pixels along horizontal bottom wall
     bottomDistance = abs(max(colBottomPixels) - min(colBottomPixels));
+    if isempty(bottomDistance)
+        bottomDistance = 0;
+    end
 
     [fieldMaxDistance, idx] = max([leftDistance rightDistance topDistance bottomDistance]);
     
     if fieldMaxDistance > maxDistance
-        longestField = i;
+        longestFieldId = i;
         maxIdx = idx; 
         maxDistance = fieldMaxDistance;
     end
@@ -62,8 +74,8 @@ end
 CM = maxDistance;
 
 % Calculates DM
-[row, col] = find(modifiedRateMap == longestField);
-% [row, col] = find(modifiedRateMap ~= 0); 
+% [row, col] = find(modifiedRateMap == longestField);
+[row, col] = find(modifiedRateMap ~= 0); 
 nPixels = length(row);
 totalDistance = 0;
 for i = 1:nPixels
