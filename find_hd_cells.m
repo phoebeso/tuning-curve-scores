@@ -1,5 +1,5 @@
 % Determines the head directions cells, which are defined as the cells in
-% the 99th percentile of mean vector length of the spikerates per 6 degree head
+% the 95th percentile of mean vector length of the spikerates per 6 degree head
 % direction bin 
 
 % bin to 0.5 s instead of 33 ms, make time bins bigger for more accuracy? 
@@ -8,11 +8,13 @@ clear all; clc;
 
 files = dir('SargoliniMoser2006');
 
+% Head direction bins are 6 degrees each 
 nHdBins = 60;
 
 % col 1 is cell file name, col 2 is direction, col 3 is spiketrain, col 4 is hd score
 cellData = cell(length(files), 4);
 
+% Loops through files from folder
 for nFile = 1:length(files)
     file = files(nFile);
     filename = file.name;
@@ -21,17 +23,20 @@ for nFile = 1:length(files)
         continue
     end    
     
+    % Loads data from file 
     fullFileName = fullfile('SargoliniMoser2006', filename);
     load(fullFileName)
     
+    % Calculates spiketrain
     dt = t(3)-t(2);
     timebins = [t; (t(end) + dt)];
     spiketrain = histcounts(ts, timebins)'; 
     
+    % Determines head direction of rat at each position
     direction = atan2(y2-y1,x2-x1)+pi/2;
     direction(direction < 0) = direction(direction<0)+2*pi; % go from 0 to 2*pi, without any negative numbers
     
-    % calculate hd tuning curve and score
+    % Calculates the head direction tuning curve and score
     [hdOccupancy, hdRates, hdScore] = calculate_hd_score(direction,spiketrain,dt,nHdBins); % hd score
     
     % Store cell data for shuffling procedure
@@ -40,7 +45,7 @@ for nFile = 1:length(files)
     cellData{nFile, 3} = spiketrain;
     cellData{nFile, 4} = hdScore;
     
-    % Graph and save tuning and occupancy curves
+    % Plot and save tuning and occupancy curves
     hdBins = (0:2*pi/nHdBins:2*pi)';
     
     figure1 = figure('Name', sprintf('%s Head Direction', name), 'Numbertitle', 'off');
@@ -65,7 +70,7 @@ end
 cellData(all(cellfun(@isempty,cellData),2), : ) = [];
 shiftedHdScores = zeros(length(cellData)*100,1);
 
-% Shift and calculate hd score for each cell 100 times
+% Shift and calculate shuffled head direction score for each cell 100 times
 for i = 1:length(cellData)
     direction2 = cellData{i, 2};
     spiketrain2 = cellData{i, 3};
@@ -84,7 +89,8 @@ for i = 1:length(cellData)
     
 end
 
-% determines 95th percentile of cells 
+% Determines 95th percentile of shuffled head direction scores to
+% define/identify head direction cells 
 sigPercentile = prctile(shiftedHdScores,95);
 hdCellsIdx = find(cell2mat(cellData(:,4)) > sigPercentile);
 hdCells = cellData(hdCellsIdx, 1);

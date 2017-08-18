@@ -153,11 +153,9 @@ for nFile = 1:length(files)
         rmax = ceil(max(rhoMeanPower));
     end
     subplot(2,2,3)
-%     polar(deg2rad((0:360)'),rhoMeanPower)
     polar_modified(deg2rad((0:360)'),rhoMeanPower, rmax)
     title('Fourier Polar Plot')
     hold on
-%     polar(deg2rad(superimpose{1}), superimpose{2})
     polar_modified(deg2rad(superimpose{1}), superimpose{2}, rmax)
     hold off
     

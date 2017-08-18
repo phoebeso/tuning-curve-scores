@@ -1,12 +1,12 @@
 function [borderScore] = calculate_border_score(rateMap)
-% We identified border cells by computing, for each cell, the difference between 
+% Method 1: We identified border cells by computing, for each cell, the difference between 
 % the maximal length of a wall touching on a single firing field and the average 
 % distance of the firing locations from the nearest wall, divided by the sum of those values
 % http://www.nature.com/neuro/journal/v13/n8/full/nn.2602.html
 
 % OR
 
-% We identified such cells by computing, for each cell, the difference between 
+% Method 2: We identified such cells by computing, for each cell, the difference between 
 % the maximal length of a single wall touching on a single firing field and 
 % the average distance of this field from the wall, divided by the sum of those values
 % http://www.sciencedirect.com/science/article/pii/S0896627314001123
@@ -62,6 +62,7 @@ for i = 1:nFields
         bottomDistance = 0;
     end
 
+    % Determines maximal length of wall touching the firing field
     [fieldMaxDistance, idx] = max([leftDistance rightDistance topDistance bottomDistance]);
     
     if fieldMaxDistance > maxDistance
@@ -74,6 +75,7 @@ end
 CM = maxDistance;
 
 % Calculates DM
+% Commented out lines used for Method 2 
 % [row, col] = find(modifiedRateMap == longestField);
 [row, col] = find(modifiedRateMap ~= 0); 
 nPixels = length(row);

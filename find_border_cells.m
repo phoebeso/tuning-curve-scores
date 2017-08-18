@@ -45,8 +45,10 @@ for nFile = 1:length(files)
     
     smoothRateMap(isnan(smoothRateMap)) = 0; 
 
+    % Calcultes border score
     borderScore = calculate_border_score(smoothRateMap);
 
+    % Plots and saves data
     figure1 = figure('Name', sprintf('%s Border Score', name), 'Numbertitle', 'off');
     imagesc(smoothRateMap); colorbar
     xlabel(['Border Score: ' num2str(borderScore)])
@@ -68,7 +70,7 @@ end
 cellData(all(cellfun(@isempty,cellData),2), : ) = [];
 shiftedBorderScores = zeros(length(cellData)*100,1);
 
-% Shift and calculate hd score for each cell 100 times
+% Shift and calculate border score for each cell 100 times
 for i = 1:length(cellData)
     posx2 = cellData{i, 2};
     posy2 = cellData{i, 3};
@@ -95,7 +97,8 @@ for i = 1:length(cellData)
     
 end
 
-% determines 95th percentile of cells 
+% Determines 95th percentile of shuffled border scores to define/identify 
+% border cells
 sigPercentile = prctile(shiftedBorderScores,95);
 borderCellsIdx = find(cell2mat(cellData(:,5)) > sigPercentile);
 borderCells = cellData(borderCellsIdx, 1);
