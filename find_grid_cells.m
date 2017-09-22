@@ -11,8 +11,8 @@ nPosBins = 20; % Each position bin is 5 x 5 cm
 % matrix, col 4 is circular matrix, cell 5 rotational correlations, cell 6
 % is grid score, cell 7 is number of periods of max collapsed partition
 % value, col 8 is fourier spectrogram, col 9 is the polar spectrogram, col
-% 10 is array of max power of 100 shifted cells, col 11 is max power 
-cellData = cell(length(files), 11);
+% 10 is aru ray of max power of 100 shifted cells, col 11 is max power 
+cellData = cell(length(files), 10);
 
 % Loops through files from folder
 for nFile = 1:length(files)
@@ -129,7 +129,7 @@ for nFile = 1:length(files)
     meanFr = sum(spiketrain) / t(end);
     maxRate = max(unsmoothRateMap(:));
     maxAdjustedRate = max(adjustedRateMap(:));
-    [fourierSpectrogram, polarSpectrogram, rhoMeanPower, superimpose, beforeMaxPower, maxPower, nComponents, shiftedMaxPowers] = ...
+    [fourierSpectrogram, polarSpectrogram, rhoMeanPower, superimpose, beforeMaxPower, maxPower, nComponents, isPeriodic] = ...
         fourier_transform(adjustedRateMap, meanFr, spiketrain, dt, posx, posy);
     
     % Plots fourier analysis 
@@ -169,8 +169,7 @@ for nFile = 1:length(files)
     cellData{nFile, 7} = maxNumPartitions;
     cellData{nFile, 8} = fourierSpectrogram;
     cellData{nFile, 9} = polarSpectrogram;
-    cellData{nFile, 10} = shiftedMaxPowers;
-    cellData{nFile, 11} = maxPower; 
+    cellData{nFile, 10} = isPeriodic;
 
     % Saves and closes figures
     mkdir(['Sargolini Output/' name])
@@ -189,8 +188,7 @@ gridCells = cellData(gridCellsIdx, 1);
 
 % Finds spatially periodic cells, defined as cells where the fourier 
 % spectrogram has a max power greater than the 95th percentile of shifted data 
-sigPercentile = prctile(cell2mat(cellData(:,10)), 95);
-periodicCellsIdx = find(cell2mat(cellData(:,11)) > sigPercentile);
+periodicCellsIdx = find(cell2mat(cellData(:,10)) == true);
 periodicCells = cellData(periodicCellsIdx, 1);
 
 save('Sargolini Output/grid_cell_data.mat', 'cellData', 'gridCells', 'periodicCells')
